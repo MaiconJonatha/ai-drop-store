@@ -292,7 +292,9 @@
             <a href="/">Loja</a>
             <a href="/dashboard">📊 Dashboard</a>
             <a href="/agents">🤖 Agentes</a>
+            <a href="/carrinho">🛒 Carrinho <span id="cartBadge" style="background:var(--red);color:white;padding:1px 6px;border-radius:10px;font-size:11px">0</span></a>
             <a href="/conta">👤 Conta</a>
+            <a href="/admin">🔐</a>
         </div>
     </nav>
     
@@ -376,8 +378,8 @@
                 </div>
                 <div class="product-footer">
                     <span class="shipping">🚚 {{ p.shipping_days }} dias</span>
-                    <button class="buy-btn" onclick="event.stopPropagation(); buyProduct('{{ p.id }}', '{{ p.name }}')">
-                        COMPRAR
+                    <button class="buy-btn" onclick="event.stopPropagation(); addToCart('{{ p.id }}', '{{ p.name }}')" title="Adicionar ao carrinho">
+                        🛒 ADD
                     </button>
                 </div>
             </div>
@@ -503,6 +505,34 @@
             }
             messages.scrollTop = messages.scrollHeight;
         }
+        
+        async function addToCart(id, name) {
+            const session = localStorage.getItem('cart_session') || (Math.random().toString(36).substr(2) + Date.now());
+            localStorage.setItem('cart_session', session);
+            try {
+                const r = await fetch('/api/cart/add', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({session, product_id: id, qty: 1})
+                });
+                const d = await r.json();
+                if (d.success) {
+                    showToast('🛒 ' + name + ' adicionado ao carrinho!');
+                    updateCartBadge();
+                    gtag('event', 'add_to_cart', {currency: 'BRL', items: [{item_name: name}]});
+                }
+            } catch(e) { showToast('❌ Erro'); }
+        }
+        
+        async function updateCartBadge() {
+            const session = localStorage.getItem('cart_session');
+            if (!session) return;
+            try {
+                const r = await fetch('/api/cart/totals?session=' + session);
+                const d = await r.json();
+                document.getElementById('cartBadge').textContent = d.items_count || 0;
+            } catch(e) {}
+        }
+        updateCartBadge();
         
         async function buyProduct(id, name) {
             try {

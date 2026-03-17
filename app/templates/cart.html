@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrinho - AI Drop Store</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --black: #111; --white: #fff; --gray-100: #f5f5f5; --gray-200: #e5e5e5; --gray-400: #999; --gray-600: #666; --red: #E30613; --success: #10B981; }
+        body { font-family: 'Inter', sans-serif; background: var(--gray-100); color: var(--black); }
+        .navbar { background: var(--white); padding: 16px 40px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--gray-200); }
+        .logo { font-size: 22px; font-weight: 900; }
+        .logo .ai { color: var(--red); }
+        .navbar a { color: var(--black); text-decoration: none; font-size: 14px; font-weight: 600; }
+        
+        .page { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        h1 { font-size: 28px; font-weight: 900; margin-bottom: 24px; }
+        
+        .cart-layout { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+        @media (max-width: 768px) { .cart-layout { grid-template-columns: 1fr; } }
+        
+        .cart-items { display: flex; flex-direction: column; gap: 12px; }
+        .cart-item {
+            background: var(--white); border-radius: 12px; padding: 20px;
+            display: flex; gap: 16px; align-items: center;
+            border: 1px solid var(--gray-200);
+        }
+        .cart-item img { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; }
+        .cart-item-info { flex: 1; }
+        .cart-item-name { font-weight: 700; font-size: 15px; }
+        .cart-item-price { color: var(--red); font-weight: 900; font-size: 18px; margin-top: 4px; }
+        .cart-item-old { color: var(--gray-400); text-decoration: line-through; font-size: 13px; }
+        .qty-controls { display: flex; align-items: center; gap: 8px; }
+        .qty-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--gray-200);
+            background: var(--white); cursor: pointer; font-size: 16px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qty-btn:hover { background: var(--gray-100); }
+        .qty-num { font-weight: 700; font-size: 16px; min-width: 24px; text-align: center; }
+        .remove-btn { color: var(--gray-400); cursor: pointer; font-size: 20px; border: none; background: none; }
+        .remove-btn:hover { color: var(--red); }
+        
+        .summary {
+            background: var(--white); border-radius: 16px; padding: 24px;
+            border: 1px solid var(--gray-200); position: sticky; top: 80px;
+        }
+        .summary h3 { font-size: 18px; font-weight: 900; margin-bottom: 20px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; }
+        .summary-row.total { font-size: 20px; font-weight: 900; border-top: 2px solid var(--black); padding-top: 16px; margin-top: 8px; }
+        .summary-row .savings { color: var(--success); font-weight: 600; }
+        
+        .coupon-box { display: flex; gap: 8px; margin: 16px 0; }
+        .coupon-box input {
+            flex: 1; padding: 12px 16px; border: 1px solid var(--gray-200);
+            border-radius: 10px; font-size: 14px; font-family: inherit; text-transform: uppercase;
+        }
+        .coupon-box button {
+            padding: 12px 20px; background: var(--black); color: var(--white);
+            border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .coupon-msg { font-size: 12px; margin-top: 4px; }
+        .coupon-msg.ok { color: var(--success); }
+        .coupon-msg.err { color: var(--red); }
+        
+        .shipping-calc { margin: 16px 0; }
+        .shipping-calc label { font-size: 13px; font-weight: 600; color: var(--gray-600); }
+        .cep-box { display: flex; gap: 8px; margin-top: 6px; }
+        .cep-box input { flex: 1; padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 14px; font-family: inherit; }
+        .cep-box button { padding: 10px 16px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; }
+        .shipping-options { margin-top: 10px; }
+        .shipping-opt {
+            display: flex; justify-content: space-between; padding: 8px 12px;
+            border: 1px solid var(--gray-200); border-radius: 8px; margin-top: 6px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .shipping-opt:hover, .shipping-opt.selected { border-color: var(--black); background: var(--gray-100); }
+        .shipping-opt .free-tag { color: var(--success); font-weight: 700; font-size: 12px; }
+        
+        .checkout-btn {
+            width: 100%; padding: 16px; background: var(--red); color: var(--white);
+            border: none; border-radius: 30px; font-size: 18px; font-weight: 900;
+            cursor: pointer; font-family: inherit; margin-top: 16px; transition: 0.2s;
+        }
+        .checkout-btn:hover { background: var(--black); transform: scale(1.02); }
+        .checkout-btn:disabled { background: var(--gray-400); cursor: not-allowed; }
+        
+        .pix-info { text-align: center; font-size: 13px; color: var(--success); margin-top: 10px; font-weight: 600; }
+        
+        .empty-cart { text-align: center; padding: 80px 20px; }
+        .empty-cart h2 { font-size: 24px; font-weight: 900; margin: 16px 0 8px; }
+        .empty-cart p { color: var(--gray-600); margin-bottom: 20px; }
+        .empty-cart a { background: var(--black); color: var(--white); padding: 14px 32px; border-radius: 30px; text-decoration: none; font-weight: 700; }
+
+        /* Flash sale banner */
+        .flash-banner {
+            background: linear-gradient(135deg, #E30613, #FF6B35);
+            color: white; padding: 12px 24px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .flash-banner .timer { font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; }
+        
+        .toast { position: fixed; top: 20px; right: 20px; background: var(--black); color: white; padding: 16px 28px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 2000; display: none; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><span class="ai">AI</span> DROP STORE</div>
+        <a href="/">← Continuar Comprando</a>
+        <a href="/dashboard">📊 Dashboard</a>
+        <a href="/conta">👤 Conta</a>
+    </nav>
+    
+    <div class="page">
+        <h1>🛒 Meu Carrinho</h1>
+        
+        <div id="flashSales"></div>
+        
+        <div id="cartContent">
+            <div class="empty-cart" id="emptyCart" style="display:none">
+                <div style="font-size:64px">🛒</div>
+                <h2>Carrinho vazio</h2>
+                <p>Adicione produtos incríveis ao seu carrinho!</p>
+                <a href="/">EXPLORAR LOJA</a>
+            </div>
+            
+            <div class="cart-layout" id="cartLayout">
+                <div class="cart-items" id="cartItems"></div>
+                
+                <div class="summary">
+                    <h3>Resumo do Pedido</h3>
+                    
+                    <div class="coupon-box">
+                        <input type="text" id="couponInput" placeholder="Cupom de desconto">
+                        <button onclick="applyCoupon()">APLICAR</button>
+                    </div>
+                    <div class="coupon-msg" id="couponMsg"></div>
+                    
+                    <div class="shipping-calc">
+                        <label>Calcular Frete</label>
+                        <div class="cep-box">
+                            <input type="text" id="cepInput" placeholder="00000-000" maxlength="9">
+                            <button onclick="calcShipping()">CALCULAR</button>
+                        </div>
+                        <div class="shipping-options" id="shippingOptions"></div>
+                    </div>
+                    
+                    <div id="summaryRows">
+                        <div class="summary-row">
+                            <span>Subtotal (<span id="itemCount">0</span> itens)</span>
+                            <span id="subtotal">R$ 0,00</span>
+                        </div>
+                        <div class="summary-row" id="discountRow" style="display:none">
+                            <span>Desconto</span>
+                            <span class="savings" id="discount">- R$ 0,00</span>
+                        </div>
+                        <div class="summary-row" id="shippingRow" style="display:none">
+                            <span>Frete</span>
+                            <span id="shippingPrice">R$ 0,00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="savings">Economia total</span>
+                            <span class="savings" id="savings">R$ 0,00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span id="total">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <button class="checkout-btn" id="checkoutBtn" onclick="goCheckout()">
+                        FINALIZAR COMPRA
+                    </button>
+                    <div class="pix-info">💚 No PIX: <span id="pixPrice">R$ 0,00</span> (5% OFF)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        const SESSION = localStorage.getItem('cart_session') || (Math.random().toString(36).substr(2) + Date.now());
+        localStorage.setItem('cart_session', SESSION);
+        
+        let cartData = {items: [], coupon: null};
+        let shippingCep = '';
+        
+        async function loadCart() {
+            try {
+                const r = await fetch('/api/cart?session=' + SESSION);
+                const d = await r.json();
+                cartData = d;
+                renderCart();
+            } catch(e) { console.error(e); }
+        }
+        
+        function renderCart() {
+            const items = cartData.items || [];
+            if (items.length === 0) {
+                document.getElementById('emptyCart').style.display = 'block';
+                document.getElementById('cartLayout').style.display = 'none';
+                return;
+            }
+            document.getElementById('emptyCart').style.display = 'none';
+            document.getElementById('cartLayout').style.display = 'grid';
+            
+            const container = document.getElementById('cartItems');
+            container.innerHTML = items.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-old">R$ ${item.old_price.toFixed(2)}</div>
+                        <div class="cart-item-price">R$ ${item.price.toFixed(2)}</div>
+                    </div>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="updateQty('${item.product_id}', ${item.qty - 1})">-</button>
+                        <span class="qty-num">${item.qty}</span>
+                        <button class="qty-btn" onclick="updateQty('${item.product_id}', ${item.qty + 1})">+</button>
+                    </div>
+                    <span style="font-weight:900;font-size:16px">R$ ${item.subtotal.toFixed(2)}</span>
+                    <button class="remove-btn" onclick="removeItem('${item.product_id}')">✕</button>
+                </div>
+            `).join('');
+            
+            updateTotals();
+        }
+        
+        async function updateTotals() {
+            try {
+                const r = await fetch('/api/cart/totals?session=' + SESSION + '&cep=' + shippingCep);
+                const d = await r.json();
+                document.getElementById('itemCount').textContent = d.items_count;
+                document.getElementById('subtotal').textContent = 'R$ ' + d.subtotal.toFixed(2);
+                document.getElementById('savings').textContent = 'R$ ' + d.savings.toFixed(2);
+                document.getElementById('total').textContent = 'R$ ' + d.total.toFixed(2);
+                document.getElementById('pixPrice').textContent = 'R$ ' + (d.total * 0.95).toFixed(2);
+                
+                if (d.discount > 0) {
+                    document.getElementById('discountRow').style.display = 'flex';
+                    document.getElementById('discount').textContent = '- R$ ' + d.discount.toFixed(2);
+                }
+                if (d.shipping > 0) {
+                    document.getElementById('shippingRow').style.display = 'flex';
+                    document.getElementById('shippingPrice').textContent = 'R$ ' + d.shipping.toFixed(2);
+                } else if (shippingCep) {
+                    document.getElementById('shippingRow').style.display = 'flex';
+                    document.getElementById('shippingPrice').textContent = 'GRÁTIS';
+                    document.getElementById('shippingPrice').style.color = 'var(--success)';
+                }
+                
+                // Update cart badge
+                document.title = `Carrinho (${d.items_count}) - AI Drop Store`;
+            } catch(e) {}
+        }
+        
+        async function updateQty(productId, qty) {
+            await fetch('/api/cart/update', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({session: SESSION, product_id: productId, qty})
+            });
+            loadCart();
+        }
+        
+        async function removeItem(productId) {
+            await fetch('/api/cart/remove', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({session: SESSION, product_id: productId})
+            });
+            loadCart();
+        }
+        
+        async function applyCoupon() {
+            const code = document.getElementById('couponInput').value;
+            const r = await fetch('/api/cart/coupon', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({session: SESSION, code})
+            });
+            const d = await r.json();
+            const msg = document.getElementById('couponMsg');
+            msg.textContent = d.success ? '✅ ' + d.message : '❌ ' + d.error;
+            msg.className = 'coupon-msg ' + (d.success ? 'ok' : 'err');
+            if (d.success) updateTotals();
+        }
+        
+        async function calcShipping() {
+            shippingCep = document.getElementById('cepInput').value;
+            const r = await fetch('/api/cart/shipping?cep=' + shippingCep + '&session=' + SESSION);
+            const d = await r.json();
+            const opts = document.getElementById('shippingOptions');
+            opts.innerHTML = `
+                <div class="shipping-opt selected" onclick="selectShipping('standard')">
+                    <div>
+                        <strong>📦 ${d.standard.name}</strong> (${d.standard.days} dias)
+                        <div style="font-size:11px;color:var(--gray-400)">${d.state_name}</div>
+                    </div>
+                    <div>${d.standard.free ? '<span class="free-tag">GRÁTIS</span>' : 'R$ ' + d.standard.price.toFixed(2)}</div>
+                </div>
+                <div class="shipping-opt" onclick="selectShipping('express')">
+                    <div>
+                        <strong>🚀 ${d.express.name}</strong> (${d.express.days} dias)
+                    </div>
+                    <div>R$ ${d.express.price.toFixed(2)}</div>
+                </div>
+            `;
+            updateTotals();
+        }
+        
+        function goCheckout() {
+            window.location = '/checkout?session=' + SESSION;
+        }
+        
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+        
+        // Load flash sales
+        async function loadFlashSales() {
+            try {
+                const r = await fetch('/api/flash-sales');
+                const d = await r.json();
+                if (d.sales && d.sales.length > 0) {
+                    document.getElementById('flashSales').innerHTML = d.sales.map(s => `
+                        <div class="flash-banner">
+                            <div>⚡ FLASH SALE: ${s.product_name} com ${s.discount_pct}% OFF!</div>
+                            <div class="timer" id="timer-${s.id}">00:00:00</div>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+        
+        loadCart();
+        loadFlashSales();
+    </script>
+</body>
+</html>

@@ -152,6 +152,7 @@
                         <option value="5">5</option>
                     </select>
                     <button class="buy-now" onclick="buyNow()">🛒 COMPRAR AGORA</button>
+                    <button style="padding:18px 24px;border-radius:30px;background:var(--gray-100);border:2px solid var(--black);cursor:pointer;font-weight:700;font-family:inherit" onclick="addToCartFromProduct()">+ CARRINHO</button>
                     <button class="wa-buy" onclick="window.open('https://wa.me/5511999999999?text=Quero+comprar+{{ product.name }}','_blank')">💬</button>
                 </div>
                 
@@ -188,6 +189,68 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- REVIEWS -->
+        <div style="margin-top:50px">
+            <h2 style="font-size:24px;font-weight:900;margin-bottom:20px">⭐ Avaliações dos Clientes</h2>
+            
+            {% if rating_stats and rating_stats.count > 0 %}
+            <div style="display:flex;gap:30px;margin-bottom:24px;padding:20px;background:var(--gray-100);border-radius:12px">
+                <div style="text-align:center">
+                    <div style="font-size:48px;font-weight:900">{{ rating_stats.avg }}</div>
+                    <div style="color:var(--red);font-size:20px">{% for i in range(5) %}{% if i < rating_stats.avg|int %}★{% else %}☆{% endif %}{% endfor %}</div>
+                    <div style="color:var(--gray-600);font-size:13px">{{ rating_stats.count }} avaliações</div>
+                </div>
+                <div style="flex:1">
+                    {% for star in [5,4,3,2,1] %}
+                    <div style="display:flex;align-items:center;gap:8px;margin:3px 0">
+                        <span style="font-size:12px;min-width:15px">{{ star }}★</span>
+                        <div style="flex:1;height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden">
+                            <div style="height:100%;background:var(--red);width:{{ (rating_stats.breakdown[star] / rating_stats.count * 100)|int if rating_stats.count > 0 else 0 }}%;border-radius:4px"></div>
+                        </div>
+                        <span style="font-size:12px;color:var(--gray-400);min-width:25px">{{ rating_stats.breakdown[star] }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% for r in reviews[:8] %}
+            <div style="padding:16px 0;border-bottom:1px solid var(--gray-200)">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        <strong>{{ r.customer_name }}</strong>
+                        {% if r.verified %}<span style="color:var(--success);font-size:11px;font-weight:600">✓ Compra verificada</span>{% endif %}
+                    </div>
+                    <span style="color:var(--gray-400);font-size:12px">{{ r.created_at[:10] }}</span>
+                </div>
+                <div style="color:var(--red);margin:4px 0">{% for i in range(5) %}{% if i < r.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+                <p style="color:var(--gray-600);font-size:14px;line-height:1.5">{{ r.text }}</p>
+                <button onclick="markHelpful('{{ r.id }}')" style="margin-top:6px;background:none;border:1px solid var(--gray-200);padding:4px 12px;border-radius:6px;font-size:12px;cursor:pointer;color:var(--gray-600)">
+                    👍 Útil ({{ r.helpful }})
+                </button>
+            </div>
+            {% endfor %}
+            
+            {% if not reviews %}
+            <p style="color:var(--gray-400);text-align:center;padding:30px">Nenhuma avaliação ainda. Seja o primeiro!</p>
+            {% endif %}
+            
+            <!-- Write Review -->
+            <div style="margin-top:24px;background:var(--gray-100);padding:24px;border-radius:12px">
+                <h3 style="font-size:16px;margin-bottom:12px">Escreva sua avaliação</h3>
+                <div style="display:flex;gap:4px;margin-bottom:12px" id="starPicker">
+                    <span onclick="setRating(1)" style="font-size:24px;cursor:pointer">☆</span>
+                    <span onclick="setRating(2)" style="font-size:24px;cursor:pointer">☆</span>
+                    <span onclick="setRating(3)" style="font-size:24px;cursor:pointer">☆</span>
+                    <span onclick="setRating(4)" style="font-size:24px;cursor:pointer">☆</span>
+                    <span onclick="setRating(5)" style="font-size:24px;cursor:pointer">☆</span>
+                </div>
+                <input type="text" id="reviewName" placeholder="Seu nome" style="width:100%;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:8px;font-family:inherit">
+                <textarea id="reviewText" placeholder="O que achou do produto?" rows="3" style="width:100%;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:8px;font-family:inherit;resize:vertical"></textarea>
+                <button onclick="submitReview()" style="background:var(--black);color:white;border:none;padding:12px 24px;border-radius:30px;font-weight:700;cursor:pointer;font-family:inherit">ENVIAR AVALIAÇÃO</button>
+            </div>
+        </div>
     </div>
     
     <div class="toast" id="toast"></div>
@@ -205,6 +268,37 @@
                     showToast('❌ ' + (data.error || 'Erro'));
                 }
             } catch(e) { showToast('❌ Erro de conexão'); }
+        }
+        let selectedRating = 5;
+        function setRating(n) {
+            selectedRating = n;
+            document.querySelectorAll('#starPicker span').forEach((s,i) => s.textContent = i < n ? '★' : '☆');
+        }
+        async function submitReview() {
+            const name = document.getElementById('reviewName').value || 'Anônimo';
+            const text = document.getElementById('reviewText').value;
+            if (!text || text.length < 5) { showToast('Escreva pelo menos 5 caracteres'); return; }
+            const r = await fetch('/api/reviews/add', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({product_id: '{{ product.id }}', customer_name: name, rating: selectedRating, title: '', text})
+            });
+            const d = await r.json();
+            showToast(d.success ? '✅ Avaliação enviada! Será moderada pela IA Nova.' : '❌ ' + d.error);
+            if (d.success) { document.getElementById('reviewText').value = ''; }
+        }
+        async function markHelpful(id) {
+            await fetch('/api/reviews/helpful', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({review_id: id})});
+            showToast('👍 Obrigado!');
+        }
+        async function addToCartFromProduct() {
+            const session = localStorage.getItem('cart_session') || (Math.random().toString(36).substr(2) + Date.now());
+            localStorage.setItem('cart_session', session);
+            const r = await fetch('/api/cart/add', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({session, product_id: '{{ product.id }}', qty: parseInt(document.getElementById('qty').value)})
+            });
+            const d = await r.json();
+            showToast(d.success ? '🛒 Adicionado ao carrinho!' : '❌ Erro');
         }
         function showToast(msg) {
             const t = document.getElementById('toast');

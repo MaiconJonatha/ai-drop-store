@@ -336,6 +336,26 @@ from app.email_marketing import (
     get_email_stats, SUBSCRIBERS, EMAIL_LOG
 )
 
+# ─── Cart + Checkout ───
+from app.cart import (
+    get_cart, add_to_cart, update_cart_qty, remove_from_cart, clear_cart,
+    apply_coupon, get_cart_totals, calc_shipping, create_flash_sale,
+    get_active_flash_sales, get_cart_stats, COUPONS, CHECKOUT_ORDERS
+)
+
+# ─── Reviews ───
+from app.reviews import (
+    generate_initial_reviews, add_review, get_product_reviews,
+    get_product_rating_stats, mark_helpful, moderate_review,
+    get_pending_reviews, get_review_stats, REVIEWS
+)
+
+# ─── Admin ───
+from app.admin import (
+    admin_login, verify_admin, admin_logout,
+    export_orders_csv, export_products_csv
+)
+
 
 async def initialize_catalog():
     await init_db()
@@ -356,7 +376,13 @@ async def initialize_catalog():
                          {"stock_low": notify_stock_low, "new_order": notify_new_order})
         await start_all_agents()
         init_whatsapp_bot(PRODUCTS, ORDERS, ask_ai, log_ai)
-        log_ai("Sistema", "MULTI-AGENT", "🤖 6 IAs + WhatsApp Bot + Social Media ativas!")
+        generate_initial_reviews(PRODUCTS)
+        if PRODUCTS:
+            import random as _r
+            for _ in range(2):
+                fp = _r.choice(PRODUCTS)
+                create_flash_sale(fp["id"], fp["name"], _r.randint(20, 40), _r.randint(2, 6))
+        log_ai("Sistema", "MULTI-AGENT", "🤖 v4.0 - Cart + Reviews + Admin + 6 IAs ativas!")
         return
     
     log_ai("Luna", "STARTUP", f"Criando catálogo com {len(INITIAL_PRODUCTS)} produtos de fornecedores reais")
@@ -405,7 +431,19 @@ async def initialize_catalog():
                      {"stock_low": notify_stock_low, "new_order": notify_new_order})
     await start_all_agents()
     init_whatsapp_bot(PRODUCTS, ORDERS, ask_ai, log_ai)
-    log_ai("Sistema", "MULTI-AGENT", "🤖 6 IAs + WhatsApp + Social Media + Email Marketing!")
+    # Generate initial reviews
+    generate_initial_reviews(PRODUCTS)
+    log_ai("Nova", "REVIEWS", f"⭐ {len(REVIEWS)} avaliações geradas e moderadas")
+    
+    # Create initial flash sales
+    if PRODUCTS:
+        import random as _r
+        for _ in range(2):
+            fp = _r.choice(PRODUCTS)
+            create_flash_sale(fp["id"], fp["name"], _r.randint(20, 40), _r.randint(2, 6))
+        log_ai("Zara", "FLASH_SALE", "⚡ Flash sales ativadas!")
+    
+    log_ai("Sistema", "MULTI-AGENT", "🤖 6 IAs + WhatsApp + Social Media + Email Marketing + Cart + Reviews!")
 
 async def ai_background_loop():
     while True:
@@ -498,9 +536,12 @@ async def product_detail(request: Request, product_id: str):
     if not product:
         return HTMLResponse("<h1>Produto não encontrado</h1>", status_code=404)
     related = [p for p in PRODUCTS if p["category"] == product["category"] and p["id"] != product_id][:4]
+    reviews = get_product_reviews(product_id)
+    rating_stats = get_product_rating_stats(product_id)
     return templates.TemplateResponse("product.html", {
         "request": request, "product": product, "related": related,
         "ai_employees": AI_EMPLOYEES, "stats": STORE_STATS, "ga_id": GA_MEASUREMENT_ID,
+        "reviews": reviews, "rating_stats": rating_stats,
     })
 
 @app.post("/api/buy/{product_id}")
@@ -885,6 +926,176 @@ User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
 """, media_type="text/plain")
+
+
+
+# ─── CART ROUTES ───
+
+@app.get("/carrinho", response_class=HTMLResponse)
+async def cart_page(request: Request):
+    return templates.TemplateResponse("cart.html", {"request": request, "ai_employees": AI_EMPLOYEES, "ga_id": GA_MEASUREMENT_ID})
+
+@app.get("/api/cart")
+async def api_get_cart(session: str = ""):
+    cart = get_cart(session)
+    return JSONResponse(cart)
+
+@app.post("/api/cart/add")
+async def api_add_to_cart(request: Request):
+    data = await request.json()
+    product = next((p for p in PRODUCTS if p["id"] == data.get("product_id")), None)
+    if not product:
+        return JSONResponse({"error": "Produto não encontrado"}, 404)
+    cart = add_to_cart(data.get("session", ""), product, data.get("qty", 1))
+    log_ai("Nova", "CART", f"🛒 Item adicionado: {product['name']}")
+    return JSONResponse({"success": True, "cart": cart})
+
+@app.post("/api/cart/update")
+async def api_update_cart(request: Request):
+    data = await request.json()
+    cart = update_cart_qty(data.get("session", ""), data.get("product_id", ""), data.get("qty", 1))
+    return JSONResponse({"success": True, "cart": cart})
+
+@app.post("/api/cart/remove")
+async def api_remove_from_cart(request: Request):
+    data = await request.json()
+    cart = remove_from_cart(data.get("session", ""), data.get("product_id", ""))
+    return JSONResponse({"success": True, "cart": cart})
+
+@app.get("/api/cart/totals")
+async def api_cart_totals(session: str = "", cep: str = ""):
+    totals = get_cart_totals(session, cep)
+    return JSONResponse(totals)
+
+@app.post("/api/cart/coupon")
+async def api_apply_coupon(request: Request):
+    data = await request.json()
+    result = apply_coupon(data.get("session", ""), data.get("code", ""))
+    return JSONResponse(result)
+
+@app.get("/api/cart/shipping")
+async def api_calc_shipping(cep: str = "", session: str = ""):
+    totals = get_cart_totals(session)
+    shipping = calc_shipping(cep, totals["subtotal"])
+    return JSONResponse(shipping)
+
+@app.get("/api/flash-sales")
+async def api_flash_sales():
+    return JSONResponse({"sales": get_active_flash_sales()})
+
+# ─── REVIEW ROUTES ───
+
+@app.get("/api/reviews/{product_id}")
+async def api_get_reviews(product_id: str):
+    reviews = get_product_reviews(product_id)
+    stats = get_product_rating_stats(product_id)
+    return JSONResponse({"reviews": reviews, "stats": stats})
+
+@app.post("/api/reviews/add")
+async def api_add_review(request: Request):
+    data = await request.json()
+    result = add_review(
+        data.get("product_id", ""), data.get("customer_name", "Anônimo"),
+        data.get("rating", 5), data.get("title", ""), data.get("text", "")
+    )
+    if result.get("success"):
+        log_ai("Nova", "REVIEW", f"⭐ Nova avaliação para moderação")
+    return JSONResponse(result)
+
+@app.post("/api/reviews/helpful")
+async def api_mark_helpful(request: Request):
+    data = await request.json()
+    ok = mark_helpful(data.get("review_id", ""))
+    return JSONResponse({"success": ok})
+
+# ─── ADMIN ROUTES ───
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_page(request: Request):
+    return templates.TemplateResponse("admin.html", {"request": request})
+
+@app.post("/api/admin/login")
+async def api_admin_login(request: Request):
+    data = await request.json()
+    result = admin_login(data.get("email", ""), data.get("password", ""))
+    return JSONResponse(result)
+
+@app.get("/api/admin/overview")
+async def api_admin_overview(token: str = ""):
+    admin = verify_admin(token)
+    if not admin:
+        return JSONResponse({"error": "Não autorizado"}, 401)
+    review_stats = get_review_stats()
+    cart_stats = get_cart_stats()
+    return JSONResponse({
+        "admin_name": admin["name"],
+        "revenue": STORE_STATS.get("total_revenue", 0),
+        "orders": STORE_STATS.get("orders_count", 0),
+        "products": len(PRODUCTS),
+        "visitors": STORE_STATS.get("visitors", 0),
+        "ai_decisions": STORE_STATS.get("ai_decisions", 0),
+        "reviews": review_stats["total_reviews"],
+        "active_carts": cart_stats["active_carts"],
+        "subscribers": len(SUBSCRIBERS),
+    })
+
+@app.get("/api/admin/products")
+async def api_admin_products(token: str = ""):
+    if not verify_admin(token):
+        return JSONResponse({"error": "Não autorizado"}, 401)
+    return JSONResponse({"products": PRODUCTS})
+
+@app.get("/api/admin/orders")
+async def api_admin_orders(token: str = ""):
+    if not verify_admin(token):
+        return JSONResponse({"error": "Não autorizado"}, 401)
+    orders = ORDERS[-50:][::-1]
+    return JSONResponse({"orders": orders})
+
+@app.post("/api/admin/order/status")
+async def api_admin_update_order(request: Request):
+    data = await request.json()
+    if not verify_admin(data.get("token", "")):
+        return JSONResponse({"error": "Não autorizado"}, 401)
+    for o in ORDERS:
+        if o.get("id") == data.get("order_id"):
+            o["status"] = data.get("status", o["status"])
+            log_ai("Vega", "ORDER_UPDATE", f"📦 {o['id']} → {o['status']}")
+            return JSONResponse({"success": True})
+    return JSONResponse({"error": "Pedido não encontrado"}, 404)
+
+@app.get("/api/admin/coupons")
+async def api_admin_coupons(token: str = ""):
+    if not verify_admin(token):
+        return JSONResponse({"error": "Não autorizado"}, 401)
+    return JSONResponse({"coupons": COUPONS})
+
+@app.get("/api/admin/reviews")
+async def api_admin_reviews(token: str = ""):
+    if not verify_admin(token):
+        return JSONResponse({"error": "Não autorizado"}, 401)
+    return JSONResponse({
+        "stats": get_review_stats(),
+        "pending": get_pending_reviews()[:20],
+    })
+
+@app.post("/api/admin/review/moderate")
+async def api_admin_moderate(request: Request):
+    data = await request.json()
+    if not verify_admin(data.get("token", "")):
+        return JSONResponse({"error": "Não autorizado"}, 401)
+    result = await moderate_review(data.get("review_id", ""), data.get("approved", True))
+    return JSONResponse(result)
+
+@app.get("/api/admin/export/orders")
+async def api_export_orders(token: str = ""):
+    csv_data = export_orders_csv(ORDERS)
+    return HTMLResponse(content=csv_data, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=orders.csv"})
+
+@app.get("/api/admin/export/products")
+async def api_export_products(token: str = ""):
+    csv_data = export_products_csv(PRODUCTS)
+    return HTMLResponse(content=csv_data, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=products.csv"})
 
 if __name__ == "__main__":
     import uvicorn

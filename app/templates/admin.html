@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - AI Drop Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --black: #111; --white: #fff; --gray-100: #f5f5f5; --gray-200: #e5e5e5; --gray-400: #999; --gray-600: #666; --red: #E30613; --success: #10B981; --warning: #F59E0B; --blue: #3B82F6; }
+        body { font-family: 'Inter', sans-serif; background: var(--gray-100); color: var(--black); }
+        
+        .admin-nav { background: var(--black); padding: 12px 24px; display: flex; align-items: center; gap: 20px; }
+        .admin-nav .logo { color: var(--white); font-size: 18px; font-weight: 900; }
+        .admin-nav .logo span { color: var(--red); }
+        .admin-nav a { color: var(--gray-400); text-decoration: none; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 8px; }
+        .admin-nav a:hover, .admin-nav a.active { background: rgba(255,255,255,0.1); color: var(--white); }
+        .admin-nav .spacer { flex: 1; }
+        .admin-nav .user { color: var(--gray-400); font-size: 12px; }
+        
+        .admin-content { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        
+        /* Login */
+        .login-box { max-width: 400px; margin: 100px auto; background: var(--white); padding: 40px; border-radius: 16px; border: 1px solid var(--gray-200); }
+        .login-box h2 { font-size: 24px; text-align: center; margin-bottom: 24px; }
+        .login-box input { width: 100%; padding: 14px; border: 1px solid var(--gray-200); border-radius: 10px; font-size: 14px; margin-bottom: 12px; font-family: inherit; }
+        .login-box button { width: 100%; padding: 14px; background: var(--black); color: var(--white); border: none; border-radius: 30px; font-weight: 700; font-size: 16px; cursor: pointer; font-family: inherit; }
+        .login-box button:hover { background: var(--red); }
+        .login-box .msg { font-size: 13px; color: var(--red); text-align: center; margin-top: 8px; }
+        
+        /* Admin Panels */
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .admin-card { background: var(--white); padding: 20px; border-radius: 12px; border: 1px solid var(--gray-200); }
+        .admin-card h4 { font-size: 13px; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.5px; }
+        .admin-card .val { font-size: 32px; font-weight: 900; margin-top: 4px; }
+        
+        .panel { background: var(--white); border-radius: 12px; padding: 24px; border: 1px solid var(--gray-200); margin-bottom: 20px; }
+        .panel h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+        
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--gray-100); padding: 4px; border-radius: 12px; }
+        .tab { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: none; font-family: inherit; }
+        .tab.active { background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-size: 11px; color: var(--gray-600); padding: 10px 12px; border-bottom: 2px solid var(--gray-200); text-transform: uppercase; }
+        td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--gray-200); }
+        tr:hover { background: var(--gray-100); }
+        
+        .badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .badge-green { background: #D1FAE5; color: #065F46; }
+        .badge-yellow { background: #FEF3C7; color: #92400E; }
+        .badge-red { background: #FEE2E2; color: #991B1B; }
+        .badge-blue { background: #DBEAFE; color: #1E40AF; }
+        
+        .action-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--gray-200); background: var(--white); cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; }
+        .action-btn:hover { background: var(--gray-100); }
+        .action-btn.danger { color: var(--red); border-color: var(--red); }
+        .action-btn.primary { background: var(--black); color: var(--white); border-color: var(--black); }
+        
+        .export-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--success); color: var(--white); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: inherit; }
+        
+        select { padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: 6px; font-family: inherit; font-size: 12px; }
+        
+        #adminLogin, #adminDashboard { display: none; }
+    </style>
+</head>
+<body>
+    <!-- LOGIN -->
+    <div id="adminLogin">
+        <div class="login-box">
+            <h2>🔐 Admin Panel</h2>
+            <p style="text-align:center;color:var(--gray-400);font-size:13px;margin-bottom:20px">AI Drop Store - Acesso Restrito</p>
+            <input type="email" id="adminEmail" placeholder="Email admin" value="admin@aidropstore.com">
+            <input type="password" id="adminPass" placeholder="Senha">
+            <button onclick="doAdminLogin()">ENTRAR</button>
+            <div class="msg" id="loginMsg"></div>
+        </div>
+    </div>
+    
+    <!-- ADMIN DASHBOARD -->
+    <div id="adminDashboard">
+        <nav class="admin-nav">
+            <div class="logo"><span>AI</span> DROP STORE ADMIN</div>
+            <a href="#" class="active" onclick="showSection('overview')">📊 Overview</a>
+            <a href="#" onclick="showSection('products')">📦 Produtos</a>
+            <a href="#" onclick="showSection('orders')">🧾 Pedidos</a>
+            <a href="#" onclick="showSection('coupons')">🎟️ Cupons</a>
+            <a href="#" onclick="showSection('reviews')">⭐ Reviews</a>
+            <div class="spacer"></div>
+            <span class="user">👤 <span id="adminName">Admin</span></span>
+            <a href="#" onclick="doAdminLogout()">Sair</a>
+        </nav>
+        
+        <div class="admin-content">
+            <!-- OVERVIEW -->
+            <div id="section-overview">
+                <h2 style="margin-bottom:20px">📊 Overview</h2>
+                <div class="admin-grid" id="overviewCards"></div>
+                <div style="display:flex;gap:10px;margin-bottom:20px">
+                    <a href="/api/admin/export/orders" class="export-btn">📥 Exportar Pedidos CSV</a>
+                    <a href="/api/admin/export/products" class="export-btn">📥 Exportar Produtos CSV</a>
+                </div>
+            </div>
+            
+            <!-- PRODUCTS -->
+            <div id="section-products" style="display:none">
+                <h2 style="margin-bottom:20px">📦 Gestão de Produtos</h2>
+                <div class="panel">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <h3>Todos os Produtos</h3>
+                        <input type="text" id="prodSearch" placeholder="Buscar..." style="padding:8px 14px;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit" onkeyup="filterProducts()">
+                    </div>
+                    <div style="overflow-x:auto">
+                        <table id="productsTable">
+                            <tr><th>Nome</th><th>Cat</th><th>Preço</th><th>Estoque</th><th>Vendidos</th><th>Rating</th><th>Fornecedor</th><th>Ações</th></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ORDERS -->
+            <div id="section-orders" style="display:none">
+                <h2 style="margin-bottom:20px">🧾 Gestão de Pedidos</h2>
+                <div class="panel">
+                    <table id="ordersTable">
+                        <tr><th>ID</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Lucro</th><th>Status</th><th>Ações</th></tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- COUPONS -->
+            <div id="section-coupons" style="display:none">
+                <h2 style="margin-bottom:20px">🎟️ Gestão de Cupons</h2>
+                <div class="panel" id="couponsPanel"></div>
+            </div>
+            
+            <!-- REVIEWS -->
+            <div id="section-reviews" style="display:none">
+                <h2 style="margin-bottom:20px">⭐ Moderação de Reviews</h2>
+                <div class="panel" id="reviewsPanel"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let adminToken = localStorage.getItem('admin_token');
+        
+        async function doAdminLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const pass = document.getElementById('adminPass').value;
+            const r = await fetch('/api/admin/login', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, password: pass})
+            });
+            const d = await r.json();
+            if (d.success) {
+                adminToken = d.token;
+                localStorage.setItem('admin_token', adminToken);
+                showAdmin();
+            } else {
+                document.getElementById('loginMsg').textContent = d.error;
+            }
+        }
+        
+        function doAdminLogout() {
+            localStorage.removeItem('admin_token');
+            adminToken = null;
+            document.getElementById('adminLogin').style.display = 'block';
+            document.getElementById('adminDashboard').style.display = 'none';
+        }
+        
+        async function showAdmin() {
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminDashboard').style.display = 'block';
+            loadOverview();
+        }
+        
+        async function loadOverview() {
+            const r = await fetch('/api/admin/overview?token=' + adminToken);
+            const d = await r.json();
+            if (d.error) { doAdminLogout(); return; }
+            
+            document.getElementById('adminName').textContent = d.admin_name || 'Admin';
+            const cards = document.getElementById('overviewCards');
+            cards.innerHTML = `
+                <div class="admin-card"><h4>Receita</h4><div class="val" style="color:var(--success)">R$ ${(d.revenue||0).toFixed(0)}</div></div>
+                <div class="admin-card"><h4>Pedidos</h4><div class="val" style="color:var(--blue)">${d.orders||0}</div></div>
+                <div class="admin-card"><h4>Produtos</h4><div class="val">${d.products||0}</div></div>
+                <div class="admin-card"><h4>Visitantes</h4><div class="val">${d.visitors||0}</div></div>
+                <div class="admin-card"><h4>Reviews</h4><div class="val" style="color:var(--warning)">${d.reviews||0}</div></div>
+                <div class="admin-card"><h4>Carrinhos Ativos</h4><div class="val" style="color:var(--red)">${d.active_carts||0}</div></div>
+                <div class="admin-card"><h4>Decisões IA</h4><div class="val" style="color:purple">${d.ai_decisions||0}</div></div>
+                <div class="admin-card"><h4>Subscribers</h4><div class="val" style="color:var(--success)">${d.subscribers||0}</div></div>
+            `;
+        }
+        
+        function showSection(name) {
+            ['overview','products','orders','coupons','reviews'].forEach(s => {
+                document.getElementById('section-' + s).style.display = s === name ? 'block' : 'none';
+            });
+            document.querySelectorAll('.admin-nav a').forEach(a => a.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (name === 'products') loadProducts();
+            if (name === 'orders') loadOrders();
+            if (name === 'coupons') loadCoupons();
+            if (name === 'reviews') loadReviews();
+        }
+        
+        async function loadProducts() {
+            const r = await fetch('/api/admin/products?token=' + adminToken);
+            const d = await r.json();
+            const table = document.getElementById('productsTable');
+            table.innerHTML = '<tr><th>Nome</th><th>Cat</th><th>Preço</th><th>Estoque</th><th>Vendidos</th><th>Rating</th><th>Fornecedor</th><th>Ações</th></tr>';
+            (d.products||[]).forEach(p => {
+                const stockClass = p.stock < 5 ? 'badge-red' : p.stock < 20 ? 'badge-yellow' : 'badge-green';
+                table.innerHTML += `<tr>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.category||''}</td>
+                    <td>R$ ${(p.price||0).toFixed(2)}</td>
+                    <td><span class="badge ${stockClass}">${p.stock}</span></td>
+                    <td>${p.sold||0}</td>
+                    <td>⭐ ${(p.rating||0).toFixed(1)}</td>
+                    <td>${p.supplier||''}</td>
+                    <td><button class="action-btn" onclick="editProduct('${p.id}')">✏️</button></td>
+                </tr>`;
+            });
+        }
+        
+        async function loadOrders() {
+            const r = await fetch('/api/admin/orders?token=' + adminToken);
+            const d = await r.json();
+            const table = document.getElementById('ordersTable');
+            table.innerHTML = '<tr><th>ID</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Lucro</th><th>Status</th><th>Ações</th></tr>';
+            (d.orders||[]).forEach(o => {
+                const product = o.product || o.product_name || '?';
+                const sc = (o.status==='Processando') ? 'badge-yellow' : (o.status==='Enviado') ? 'badge-blue' : 'badge-green';
+                table.innerHTML += `<tr>
+                    <td><strong>${o.id||''}</strong></td>
+                    <td>${product}</td>
+                    <td>${o.qty||0}</td>
+                    <td style="color:var(--success)">R$ ${(o.total||0).toFixed(2)}</td>
+                    <td style="color:var(--warning)">R$ ${(o.profit||0).toFixed(2)}</td>
+                    <td><span class="badge ${sc}">${o.status||'?'}</span></td>
+                    <td>
+                        <select onchange="updateOrderStatus('${o.id}',this.value)">
+                            <option ${o.status==='Processando'?'selected':''}>Processando</option>
+                            <option ${o.status==='Enviado'?'selected':''}>Enviado</option>
+                            <option ${o.status==='Em trânsito'?'selected':''}>Em trânsito</option>
+                            <option ${o.status==='Entregue'?'selected':''}>Entregue</option>
+                        </select>
+                    </td>
+                </tr>`;
+            });
+        }
+        
+        async function loadCoupons() {
+            const r = await fetch('/api/admin/coupons?token=' + adminToken);
+            const d = await r.json();
+            const panel = document.getElementById('couponsPanel');
+            panel.innerHTML = '<h3>🎟️ Cupons Ativos</h3><table><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Min</th><th>Usados</th><th>Status</th></tr>';
+            Object.entries(d.coupons||{}).forEach(([code, c]) => {
+                const val = c.type==='percent' ? c.value+'%' : c.type==='fixed' ? 'R$'+c.value : 'Frete Grátis';
+                panel.innerHTML += `<tr><td><strong>${code}</strong></td><td>${c.type}</td><td>${val}</td><td>R$${c.min_order}</td><td>${c.used}/${c.max_uses}</td><td><span class="badge ${c.active?'badge-green':'badge-red'}">${c.active?'Ativo':'Inativo'}</span></td></tr>`;
+            });
+            panel.innerHTML += '</table>';
+        }
+        
+        async function loadReviews() {
+            const r = await fetch('/api/admin/reviews?token=' + adminToken);
+            const d = await r.json();
+            const panel = document.getElementById('reviewsPanel');
+            panel.innerHTML = `<h3>⭐ Reviews (${d.stats?.total_reviews||0} total, ${d.stats?.pending||0} pendentes)</h3>`;
+            panel.innerHTML += '<table><tr><th>Produto</th><th>Cliente</th><th>Rating</th><th>Texto</th><th>Status</th><th>Ações</th></tr>';
+            (d.pending||[]).forEach(rv => {
+                panel.innerHTML += `<tr>
+                    <td>${rv.product_name||rv.product_id}</td>
+                    <td>${rv.customer_name}</td>
+                    <td>${'⭐'.repeat(rv.rating)}</td>
+                    <td>${rv.text.substring(0,50)}...</td>
+                    <td><span class="badge badge-yellow">Pendente</span></td>
+                    <td>
+                        <button class="action-btn primary" onclick="moderateReview('${rv.id}',true)">✅</button>
+                        <button class="action-btn danger" onclick="moderateReview('${rv.id}',false)">❌</button>
+                    </td>
+                </tr>`;
+            });
+            panel.innerHTML += '</table>';
+        }
+        
+        async function updateOrderStatus(orderId, status) {
+            await fetch('/api/admin/order/status', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({token: adminToken, order_id: orderId, status})
+            });
+        }
+        
+        async function moderateReview(reviewId, approved) {
+            await fetch('/api/admin/review/moderate', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({token: adminToken, review_id: reviewId, approved})
+            });
+            loadReviews();
+        }
+        
+        function editProduct(id) { alert('Editor de produto: ' + id + '\n(Em desenvolvimento)'); }
+        function filterProducts() {
+            const q = document.getElementById('prodSearch').value.toLowerCase();
+            document.querySelectorAll('#productsTable tr:not(:first-child)').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+        
+        // Init
+        if (adminToken) showAdmin(); else document.getElementById('adminLogin').style.display = 'block';
+    </script>
+</body>
+</html>
