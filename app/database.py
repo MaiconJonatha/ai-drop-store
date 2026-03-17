@@ -6,7 +6,10 @@ Both are kept in sync.
 """
 import os
 import aiosqlite
-import asyncpg
+try:
+    import asyncpg
+except ImportError:
+    asyncpg = None
 from pathlib import Path
 
 # Config
@@ -20,6 +23,9 @@ pg_pool = None
 async def init_pg():
     """Initialize PostgreSQL"""
     global pg_pool
+    if asyncpg is None:
+        print("[DB] asyncpg not installed, skipping PostgreSQL")
+        return False
     try:
         pg_pool = await asyncpg.create_pool(
             database="ai_dropstore",
