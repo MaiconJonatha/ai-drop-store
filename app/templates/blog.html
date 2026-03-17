@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - AI Drop Store</title>
+    <meta name="description" content="AI-powered blog with articles about Nike, AI, E-commerce and more. Written by Aria, our AI Copywriter.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --black: #111; --white: #fff; --gray-100: #f5f5f5; --gray-200: #e5e5e5; --gray-400: #999; --gray-600: #666; --red: #E30613; --success: #10B981; }
+        body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--black); }
+        body.dark { --black: #f5f5f5; --white: #0a0a0a; --gray-100: #1a1a1a; --gray-200: #2a2a2a; --gray-400: #888; --gray-600: #aaa; background: #0a0a0a; color: #f5f5f5; }
+        .navbar { background: var(--white); padding: 16px 40px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--gray-200); }
+        .logo { font-size: 22px; font-weight: 900; }
+        .logo .ai { color: var(--red); }
+        .navbar a { color: var(--black); text-decoration: none; font-size: 14px; font-weight: 600; }
+        .navbar a:hover { color: var(--red); }
+        .navbar .spacer { flex: 1; }
+        .dark-toggle { cursor: pointer; font-size: 20px; border: none; background: none; padding: 6px; border-radius: 8px; }
+        .dark-toggle:hover { background: var(--gray-100); }
+        
+        .blog-hero { background: var(--black); color: var(--white); padding: 60px 40px; text-align: center; }
+        body.dark .blog-hero { background: #111; }
+        .blog-hero h1 { font-size: 42px; font-weight: 900; letter-spacing: -1px; }
+        .blog-hero h1 span { color: var(--red); }
+        .blog-hero p { color: var(--gray-400); margin-top: 8px; font-size: 15px; }
+        
+        .blog-cats { display: flex; gap: 10px; padding: 20px 40px; overflow-x: auto; border-bottom: 1px solid var(--gray-200); background: var(--white); }
+        .blog-cat { padding: 8px 20px; border-radius: 30px; border: 2px solid var(--gray-200); background: var(--white); color: var(--black); cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; font-family: inherit; }
+        .blog-cat:hover, .blog-cat.active { background: var(--black); color: var(--white); border-color: var(--black); }
+        body.dark .blog-cat:hover, body.dark .blog-cat.active { background: var(--red); border-color: var(--red); }
+        
+        .blog-grid { max-width: 1100px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
+        .blog-card { background: var(--white); border-radius: 16px; overflow: hidden; border: 1px solid var(--gray-200); transition: 0.3s; cursor: pointer; }
+        .blog-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.12); transform: translateY(-4px); }
+        .blog-card img { width: 100%; height: 200px; object-fit: cover; }
+        .blog-card .info { padding: 20px; }
+        .blog-card .cat { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; background: var(--red); color: white; margin-bottom: 8px; }
+        .blog-card h2 { font-size: 18px; font-weight: 800; line-height: 1.3; margin-bottom: 8px; }
+        .blog-card .excerpt { font-size: 14px; color: var(--gray-600); line-height: 1.5; margin-bottom: 12px; }
+        .blog-card .meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-400); }
+        
+        .blog-stats { display: flex; gap: 30px; justify-content: center; padding: 16px; }
+        .blog-stats .stat { text-align: center; }
+        .blog-stats .stat .num { font-size: 24px; font-weight: 900; color: var(--white); }
+        body.dark .blog-stats .stat .num { color: #f5f5f5; }
+        .blog-stats .stat .label { font-size: 11px; color: var(--gray-400); text-transform: uppercase; }
+        
+        @media (max-width: 768px) { .blog-grid { grid-template-columns: 1fr; } .blog-hero h1 { font-size: 28px; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><span class="ai">AI</span> DROP STORE</div>
+        <a href="/">Store</a>
+        <a href="/blog" style="color:var(--red)">Blog</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/affiliates">Affiliates</a>
+        <div class="spacer"></div>
+        <button class="dark-toggle" onclick="toggleDark()" id="darkBtn">🌙</button>
+    </nav>
+    
+    <div class="blog-hero">
+        <h1>THE <span>AI</span> BLOG</h1>
+        <p>Written by Aria, our AI Copywriter • Powered by Claude AI</p>
+        <div class="blog-stats">
+            <div class="stat"><div class="num">{{ stats.total_posts }}</div><div class="label">Articles</div></div>
+            <div class="stat"><div class="num">{{ stats.total_views }}</div><div class="label">Views</div></div>
+            <div class="stat"><div class="num">{{ stats.total_likes }}</div><div class="label">Likes</div></div>
+        </div>
+    </div>
+    
+    <div class="blog-cats">
+        <a href="/blog" class="blog-cat {% if not current_cat %}active{% endif %}">All</a>
+        {% for cat in categories %}
+        <a href="/blog?cat={{ cat }}" class="blog-cat {% if current_cat == cat %}active{% endif %}">{{ cat }}</a>
+        {% endfor %}
+    </div>
+    
+    <div class="blog-grid">
+        {% for post in posts %}
+        <div class="blog-card" onclick="window.location='/blog/{{ post.slug }}'">
+            <img src="{{ post.image }}" alt="{{ post.title }}" loading="lazy">
+            <div class="info">
+                <span class="cat">{{ post.category }}</span>
+                <h2>{{ post.title }}</h2>
+                <p class="excerpt">{{ post.excerpt }}</p>
+                <div class="meta">
+                    <span>✍️ {{ post.author }}</span>
+                    <span>📖 {{ post.read_time }} min read • 👁️ {{ post.views }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <script>
+        function toggleDark() {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            localStorage.setItem('dark_mode', isDark);
+            document.getElementById('darkBtn').textContent = isDark ? '☀️' : '🌙';
+        }
+        if (localStorage.getItem('dark_mode') === 'true') {
+            document.body.classList.add('dark');
+            document.getElementById('darkBtn').textContent = '☀️';
+        }
+    </script>
+</body>
+</html>

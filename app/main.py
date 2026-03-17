@@ -350,6 +350,15 @@ from app.reviews import (
     get_pending_reviews, get_review_stats, REVIEWS
 )
 
+# ─── Blog ───
+from app.blog import init_blog, get_all_posts, get_post_by_slug, get_blog_categories, get_blog_stats
+
+# ─── Affiliates ───
+from app.affiliates import (
+    register_affiliate, track_click, track_sale, get_affiliate,
+    get_affiliate_sales, get_affiliate_stats, init_affiliates, AFFILIATES
+)
+
 # ─── Admin ───
 from app.admin import (
     admin_login, verify_admin, admin_logout,
@@ -382,7 +391,10 @@ async def initialize_catalog():
             for _ in range(2):
                 fp = _r.choice(PRODUCTS)
                 create_flash_sale(fp["id"], fp["name"], _r.randint(20, 40), _r.randint(2, 6))
-        log_ai("Sistema", "MULTI-AGENT", "🤖 v4.0 - Cart + Reviews + Admin + 6 IAs ativas!")
+        init_blog()
+        init_affiliates()
+        log_ai("Aria", "BLOG", f"📝 Blog initialized with {len(get_all_posts())} articles")
+        log_ai("Sistema", "MULTI-AGENT", "🤖 v5.0 - Blog + Affiliates + Dark Mode + Cart + Reviews + Admin!")
         return
     
     log_ai("Luna", "STARTUP", f"Criando catálogo com {len(INITIAL_PRODUCTS)} produtos de fornecedores reais")
@@ -443,7 +455,10 @@ async def initialize_catalog():
             create_flash_sale(fp["id"], fp["name"], _r.randint(20, 40), _r.randint(2, 6))
         log_ai("Zara", "FLASH_SALE", "⚡ Flash sales ativadas!")
     
-    log_ai("Sistema", "MULTI-AGENT", "🤖 6 IAs + WhatsApp + Social Media + Email Marketing + Cart + Reviews!")
+    init_blog()
+    init_affiliates()
+    log_ai("Aria", "BLOG", f"📝 Blog initialized with {len(get_all_posts())} articles")
+    log_ai("Sistema", "MULTI-AGENT", "🤖 v5.0 - Blog + Affiliates + Dark Mode + all features!")
 
 async def ai_background_loop():
     while True:
@@ -498,13 +513,17 @@ async def ai_background_loop():
 
 @app.on_event("startup")
 async def startup():
+    init_blog()
+    init_affiliates()
     asyncio.create_task(initialize_catalog())
 
 # ─── Routes ───
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request, cat: Optional[str] = None, q: Optional[str] = None, sort: Optional[str] = None):
+async def home(request: Request, cat: Optional[str] = None, q: Optional[str] = None, sort: Optional[str] = None, ref: Optional[str] = None):
     STORE_STATS["visitors"] += 1
+    if ref:
+        track_click(ref)
     products = PRODUCTS[:]
     
     if cat:
@@ -1096,6 +1115,52 @@ async def api_export_orders(token: str = ""):
 async def api_export_products(token: str = ""):
     csv_data = export_products_csv(PRODUCTS)
     return HTMLResponse(content=csv_data, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=products.csv"})
+
+
+
+# ─── BLOG ROUTES ───
+
+@app.get("/blog", response_class=HTMLResponse)
+async def blog_page(request: Request, cat: str = ""):
+    posts = get_all_posts(cat)
+    return templates.TemplateResponse("blog.html", {
+        "request": request, "posts": posts, "categories": get_blog_categories(),
+        "stats": get_blog_stats(), "current_cat": cat,
+    })
+
+@app.get("/blog/{slug}", response_class=HTMLResponse)
+async def blog_post_page(request: Request, slug: str):
+    post = get_post_by_slug(slug)
+    if not post:
+        return HTMLResponse("<h1>Post not found</h1>", 404)
+    related = [p for p in get_all_posts() if p["slug"] != slug][:3]
+    return templates.TemplateResponse("blog_post.html", {
+        "request": request, "post": post, "related": related,
+    })
+
+# ─── AFFILIATE ROUTES ───
+
+@app.get("/affiliates", response_class=HTMLResponse)
+async def affiliates_page(request: Request):
+    return templates.TemplateResponse("affiliates.html", {"request": request})
+
+@app.post("/api/affiliates/register")
+async def api_register_affiliate(request: Request):
+    data = await request.json()
+    result = register_affiliate(data.get("name", ""), data.get("email", ""))
+    return JSONResponse(result)
+
+@app.get("/api/affiliates/{code}")
+async def api_get_affiliate(code: str):
+    aff = get_affiliate(code)
+    if not aff:
+        return JSONResponse({"error": "Affiliate not found"}, 404)
+    return JSONResponse({"affiliate": aff, "sales": get_affiliate_sales(code)})
+
+@app.get("/api/affiliates/leaderboard")
+async def api_affiliate_leaderboard():
+    sorted_affs = sorted(AFFILIATES.values(), key=lambda x: x["total_earned"], reverse=True)
+    return JSONResponse({"leaderboard": sorted_affs[:10]})
 
 if __name__ == "__main__":
     import uvicorn
