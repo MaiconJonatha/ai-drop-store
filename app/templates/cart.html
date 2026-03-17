@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrinho - AI Drop Store</title>
+    <title>Cart - AI Drop Store</title>
     <link rel="manifest" href="/static/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -109,60 +109,60 @@
 <body>
     <nav class="navbar">
         <div class="logo"><span class="ai">AI</span> DROP STORE</div>
-        <a href="/">← Continuar Comprando</a>
+        <a href="/">← Continue Shopping</a>
         <a href="/dashboard">📊 Dashboard</a>
-        <a href="/conta">👤 Conta</a>
+        <a href="/conta">👤 Account</a>
     </nav>
     
     <div class="page">
-        <h1>🛒 Meu Carrinho</h1>
+        <h1>🛒 My Cart</h1>
         
         <div id="flashSales"></div>
         
         <div id="cartContent">
             <div class="empty-cart" id="emptyCart" style="display:none">
                 <div style="font-size:64px">🛒</div>
-                <h2>Carrinho vazio</h2>
-                <p>Adicione produtos incríveis ao seu carrinho!</p>
-                <a href="/">EXPLORAR LOJA</a>
+                <h2>Cart is empty</h2>
+                <p>Add amazing products to your cart!</p>
+                <a href="/">EXPLORE STORE</a>
             </div>
             
             <div class="cart-layout" id="cartLayout">
                 <div class="cart-items" id="cartItems"></div>
                 
                 <div class="summary">
-                    <h3>Resumo do Pedido</h3>
+                    <h3>Order Summary</h3>
                     
                     <div class="coupon-box">
-                        <input type="text" id="couponInput" placeholder="Cupom de desconto">
-                        <button onclick="applyCoupon()">APLICAR</button>
+                        <input type="text" id="couponInput" placeholder="Discount coupon">
+                        <button onclick="applyCoupon()">APPLY</button>
                     </div>
                     <div class="coupon-msg" id="couponMsg"></div>
                     
                     <div class="shipping-calc">
-                        <label>Calcular Frete</label>
+                        <label>Calculate Shipping</label>
                         <div class="cep-box">
                             <input type="text" id="cepInput" placeholder="00000-000" maxlength="9">
-                            <button onclick="calcShipping()">CALCULAR</button>
+                            <button onclick="calcShipping()">CALCULATE</button>
                         </div>
                         <div class="shipping-options" id="shippingOptions"></div>
                     </div>
                     
                     <div id="summaryRows">
                         <div class="summary-row">
-                            <span>Subtotal (<span id="itemCount">0</span> itens)</span>
+                            <span>Subtotal (<span id="itemCount">0</span> items)</span>
                             <span id="subtotal">R$ 0,00</span>
                         </div>
                         <div class="summary-row" id="discountRow" style="display:none">
-                            <span>Desconto</span>
+                            <span>Discount</span>
                             <span class="savings" id="discount">- R$ 0,00</span>
                         </div>
                         <div class="summary-row" id="shippingRow" style="display:none">
-                            <span>Frete</span>
+                            <span>Shipping</span>
                             <span id="shippingPrice">R$ 0,00</span>
                         </div>
                         <div class="summary-row">
-                            <span class="savings">Economia total</span>
+                            <span class="savings">Total savings</span>
                             <span class="savings" id="savings">R$ 0,00</span>
                         </div>
                         <div class="summary-row total">
@@ -172,9 +172,9 @@
                     </div>
                     
                     <button class="checkout-btn" id="checkoutBtn" onclick="goCheckout()">
-                        FINALIZAR COMPRA
+                        CHECKOUT
                     </button>
-                    <div class="pix-info">💚 No PIX: <span id="pixPrice">R$ 0,00</span> (5% OFF)</div>
+                    <div class="pix-info">💚 With PIX: <span id="pixPrice">R$ 0,00</span> (5% OFF)</div>
                 </div>
             </div>
         </div>
@@ -249,12 +249,12 @@
                     document.getElementById('shippingPrice').textContent = 'R$ ' + d.shipping.toFixed(2);
                 } else if (shippingCep) {
                     document.getElementById('shippingRow').style.display = 'flex';
-                    document.getElementById('shippingPrice').textContent = 'GRÁTIS';
+                    document.getElementById('shippingPrice').textContent = 'FREE';
                     document.getElementById('shippingPrice').style.color = 'var(--success)';
                 }
                 
                 // Update cart badge
-                document.title = `Carrinho (${d.items_count}) - AI Drop Store`;
+                document.title = `Cart (${d.items_count}) - AI Drop Store`;
             } catch(e) {}
         }
         
@@ -295,14 +295,14 @@
             opts.innerHTML = `
                 <div class="shipping-opt selected" onclick="selectShipping('standard')">
                     <div>
-                        <strong>📦 ${d.standard.name}</strong> (${d.standard.days} dias)
+                        <strong>📦 ${d.standard.name}</strong> (${d.standard.days} days)
                         <div style="font-size:11px;color:var(--gray-400)">${d.state_name}</div>
                     </div>
                     <div>${d.standard.free ? '<span class="free-tag">GRÁTIS</span>' : 'R$ ' + d.standard.price.toFixed(2)}</div>
                 </div>
                 <div class="shipping-opt" onclick="selectShipping('express')">
                     <div>
-                        <strong>🚀 ${d.express.name}</strong> (${d.express.days} dias)
+                        <strong>🚀 ${d.express.name}</strong> (${d.express.days} days)
                     </div>
                     <div>R$ ${d.express.price.toFixed(2)}</div>
                 </div>
@@ -328,7 +328,7 @@
                 if (d.sales && d.sales.length > 0) {
                     document.getElementById('flashSales').innerHTML = d.sales.map(s => `
                         <div class="flash-banner">
-                            <div>⚡ FLASH SALE: ${s.product_name} com ${s.discount_pct}% OFF!</div>
+                            <div>⚡ FLASH SALE: ${s.product_name} ${s.discount_pct}% OFF!</div>
                             <div class="timer" id="timer-${s.id}">00:00:00</div>
                         </div>
                     `).join('');

@@ -79,7 +79,7 @@ async def register_customer(name: str, email: str, password: str) -> dict:
     async with aiosqlite.connect(SQLITE_PATH) as db:
         existing = await db.execute("SELECT id FROM customers WHERE email = ?", (email,))
         if await existing.fetchone():
-            return {"error": "Email já cadastrado"}
+            return {"error": "Email already registered"}
         cursor = await db.execute(
             "INSERT INTO customers (name, email, password_hash) VALUES (?, ?, ?)",
             (name, email, hash_password(password))
@@ -95,7 +95,7 @@ async def login_customer(email: str, password: str) -> dict:
         cursor = await db.execute("SELECT * FROM customers WHERE email = ?", (email,))
         customer = await cursor.fetchone()
         if not customer or not verify_password(password, customer["password_hash"]):
-            return {"error": "Email ou senha incorretos"}
+            return {"error": "Incorrect email or password"}
         token = create_token(customer["id"], email)
         return {"success": True, "token": token, "customer_id": customer["id"], "name": customer["name"]}
 

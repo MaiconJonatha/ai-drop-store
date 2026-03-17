@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,10 +69,10 @@
     <div id="adminLogin">
         <div class="login-box">
             <h2>🔐 Admin Panel</h2>
-            <p style="text-align:center;color:var(--gray-400);font-size:13px;margin-bottom:20px">AI Drop Store - Acesso Restrito</p>
-            <input type="email" id="adminEmail" placeholder="Email admin" value="admin@aidropstore.com">
-            <input type="password" id="adminPass" placeholder="Senha">
-            <button onclick="doAdminLogin()">ENTRAR</button>
+            <p style="text-align:center;color:var(--gray-400);font-size:13px;margin-bottom:20px">AI Drop Store - Restricted Access</p>
+            <input type="email" id="adminEmail" placeholder="Admin email" value="admin@aidropstore.com">
+            <input type="password" id="adminPass" placeholder="Password">
+            <button onclick="doAdminLogin()">LOGIN</button>
             <div class="msg" id="loginMsg"></div>
         </div>
     </div>
@@ -82,13 +82,13 @@
         <nav class="admin-nav">
             <div class="logo"><span>AI</span> DROP STORE ADMIN</div>
             <a href="#" class="active" onclick="showSection('overview')">📊 Overview</a>
-            <a href="#" onclick="showSection('products')">📦 Produtos</a>
-            <a href="#" onclick="showSection('orders')">🧾 Pedidos</a>
-            <a href="#" onclick="showSection('coupons')">🎟️ Cupons</a>
+            <a href="#" onclick="showSection('products')">📦 Products</a>
+            <a href="#" onclick="showSection('orders')">🧾 Orders</a>
+            <a href="#" onclick="showSection('coupons')">🎟️ Coupons</a>
             <a href="#" onclick="showSection('reviews')">⭐ Reviews</a>
             <div class="spacer"></div>
             <span class="user">👤 <span id="adminName">Admin</span></span>
-            <a href="#" onclick="doAdminLogout()">Sair</a>
+            <a href="#" onclick="doAdminLogout()">Logout</a>
         </nav>
         
         <div class="admin-content">
@@ -97,22 +97,22 @@
                 <h2 style="margin-bottom:20px">📊 Overview</h2>
                 <div class="admin-grid" id="overviewCards"></div>
                 <div style="display:flex;gap:10px;margin-bottom:20px">
-                    <a href="/api/admin/export/orders" class="export-btn">📥 Exportar Pedidos CSV</a>
-                    <a href="/api/admin/export/products" class="export-btn">📥 Exportar Produtos CSV</a>
+                    <a href="/api/admin/export/orders" class="export-btn">📥 Export Orders CSV</a>
+                    <a href="/api/admin/export/products" class="export-btn">📥 Export Products CSV</a>
                 </div>
             </div>
             
             <!-- PRODUCTS -->
             <div id="section-products" style="display:none">
-                <h2 style="margin-bottom:20px">📦 Gestão de Produtos</h2>
+                <h2 style="margin-bottom:20px">📦 Product Management</h2>
                 <div class="panel">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                        <h3>Todos os Produtos</h3>
-                        <input type="text" id="prodSearch" placeholder="Buscar..." style="padding:8px 14px;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit" onkeyup="filterProducts()">
+                        <h3>All Products</h3>
+                        <input type="text" id="prodSearch" placeholder="Search..." style="padding:8px 14px;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit" onkeyup="filterProducts()">
                     </div>
                     <div style="overflow-x:auto">
                         <table id="productsTable">
-                            <tr><th>Nome</th><th>Cat</th><th>Preço</th><th>Estoque</th><th>Vendidos</th><th>Rating</th><th>Fornecedor</th><th>Ações</th></tr>
+                            <tr><th>Name</th><th>Cat</th><th>Price</th><th>Stock</th><th>Sold</th><th>Rating</th><th>Supplier</th><th>Actions</th></tr>
                         </table>
                     </div>
                 </div>
@@ -120,23 +120,23 @@
             
             <!-- ORDERS -->
             <div id="section-orders" style="display:none">
-                <h2 style="margin-bottom:20px">🧾 Gestão de Pedidos</h2>
+                <h2 style="margin-bottom:20px">🧾 Order Management</h2>
                 <div class="panel">
                     <table id="ordersTable">
-                        <tr><th>ID</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Lucro</th><th>Status</th><th>Ações</th></tr>
+                        <tr><th>ID</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Profit</th><th>Status</th><th>Actions</th></tr>
                     </table>
                 </div>
             </div>
             
             <!-- COUPONS -->
             <div id="section-coupons" style="display:none">
-                <h2 style="margin-bottom:20px">🎟️ Gestão de Cupons</h2>
+                <h2 style="margin-bottom:20px">🎟️ Coupon Management</h2>
                 <div class="panel" id="couponsPanel"></div>
             </div>
             
             <!-- REVIEWS -->
             <div id="section-reviews" style="display:none">
-                <h2 style="margin-bottom:20px">⭐ Moderação de Reviews</h2>
+                <h2 style="margin-bottom:20px">⭐ Review Moderation</h2>
                 <div class="panel" id="reviewsPanel"></div>
             </div>
         </div>
@@ -211,7 +211,7 @@
             const r = await fetch('/api/admin/products?token=' + adminToken);
             const d = await r.json();
             const table = document.getElementById('productsTable');
-            table.innerHTML = '<tr><th>Nome</th><th>Cat</th><th>Preço</th><th>Estoque</th><th>Vendidos</th><th>Rating</th><th>Fornecedor</th><th>Ações</th></tr>';
+            table.innerHTML = '<tr><th>Name</th><th>Cat</th><th>Price</th><th>Stock</th><th>Sold</th><th>Rating</th><th>Supplier</th><th>Actions</th></tr>';
             (d.products||[]).forEach(p => {
                 const stockClass = p.stock < 5 ? 'badge-red' : p.stock < 20 ? 'badge-yellow' : 'badge-green';
                 table.innerHTML += `<tr>
@@ -231,10 +231,10 @@
             const r = await fetch('/api/admin/orders?token=' + adminToken);
             const d = await r.json();
             const table = document.getElementById('ordersTable');
-            table.innerHTML = '<tr><th>ID</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Lucro</th><th>Status</th><th>Ações</th></tr>';
+            table.innerHTML = '<tr><th>ID</th><th>Produto</th><th>Qtd</th><th>Total</th><th>Profit</th><th>Status</th><th>Actions</th></tr>';
             (d.orders||[]).forEach(o => {
                 const product = o.product || o.product_name || '?';
-                const sc = (o.status==='Processando') ? 'badge-yellow' : (o.status==='Enviado') ? 'badge-blue' : 'badge-green';
+                const sc = (o.status==='Processing') ? 'badge-yellow' : (o.status==='Shipped') ? 'badge-blue' : 'badge-green';
                 table.innerHTML += `<tr>
                     <td><strong>${o.id||''}</strong></td>
                     <td>${product}</td>
@@ -244,10 +244,10 @@
                     <td><span class="badge ${sc}">${o.status||'?'}</span></td>
                     <td>
                         <select onchange="updateOrderStatus('${o.id}',this.value)">
-                            <option ${o.status==='Processando'?'selected':''}>Processando</option>
-                            <option ${o.status==='Enviado'?'selected':''}>Enviado</option>
-                            <option ${o.status==='Em trânsito'?'selected':''}>Em trânsito</option>
-                            <option ${o.status==='Entregue'?'selected':''}>Entregue</option>
+                            <option ${o.status==='Processing'?'selected':''}>Processing</option>
+                            <option ${o.status==='Shipped'?'selected':''}>Shipped</option>
+                            <option ${o.status==='In Transit'?'selected':''}>In Transit</option>
+                            <option ${o.status==='Delivered'?'selected':''}>Delivered</option>
                         </select>
                     </td>
                 </tr>`;
@@ -258,10 +258,10 @@
             const r = await fetch('/api/admin/coupons?token=' + adminToken);
             const d = await r.json();
             const panel = document.getElementById('couponsPanel');
-            panel.innerHTML = '<h3>🎟️ Cupons Ativos</h3><table><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Min</th><th>Usados</th><th>Status</th></tr>';
+            panel.innerHTML = '<h3>🎟️ Coupons Ativos</h3><table><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Min</th><th>Usados</th><th>Status</th></tr>';
             Object.entries(d.coupons||{}).forEach(([code, c]) => {
-                const val = c.type==='percent' ? c.value+'%' : c.type==='fixed' ? 'R$'+c.value : 'Frete Grátis';
-                panel.innerHTML += `<tr><td><strong>${code}</strong></td><td>${c.type}</td><td>${val}</td><td>R$${c.min_order}</td><td>${c.used}/${c.max_uses}</td><td><span class="badge ${c.active?'badge-green':'badge-red'}">${c.active?'Ativo':'Inativo'}</span></td></tr>`;
+                const val = c.type==='percent' ? c.value+'%' : c.type==='fixed' ? 'R$'+c.value : 'Free Shipping';
+                panel.innerHTML += `<tr><td><strong>${code}</strong></td><td>${c.type}</td><td>${val}</td><td>R$${c.min_order}</td><td>${c.used}/${c.max_uses}</td><td><span class="badge ${c.active?'badge-green':'badge-red'}">${c.active?'Active':'Inactive'}</span></td></tr>`;
             });
             panel.innerHTML += '</table>';
         }
@@ -270,15 +270,15 @@
             const r = await fetch('/api/admin/reviews?token=' + adminToken);
             const d = await r.json();
             const panel = document.getElementById('reviewsPanel');
-            panel.innerHTML = `<h3>⭐ Reviews (${d.stats?.total_reviews||0} total, ${d.stats?.pending||0} pendentes)</h3>`;
-            panel.innerHTML += '<table><tr><th>Produto</th><th>Cliente</th><th>Rating</th><th>Texto</th><th>Status</th><th>Ações</th></tr>';
+            panel.innerHTML = `<h3>⭐ Reviews (${d.stats?.total_reviews||0} total, ${d.stats?.pending||0} pending)</h3>`;
+            panel.innerHTML += '<table><tr><th>Produto</th><th>Cliente</th><th>Rating</th><th>Texto</th><th>Status</th><th>Actions</th></tr>';
             (d.pending||[]).forEach(rv => {
                 panel.innerHTML += `<tr>
                     <td>${rv.product_name||rv.product_id}</td>
                     <td>${rv.customer_name}</td>
                     <td>${'⭐'.repeat(rv.rating)}</td>
                     <td>${rv.text.substring(0,50)}...</td>
-                    <td><span class="badge badge-yellow">Pendente</span></td>
+                    <td><span class="badge badge-yellow">Pending</span></td>
                     <td>
                         <button class="action-btn primary" onclick="moderateReview('${rv.id}',true)">✅</button>
                         <button class="action-btn danger" onclick="moderateReview('${rv.id}',false)">❌</button>
@@ -303,7 +303,7 @@
             loadReviews();
         }
         
-        function editProduct(id) { alert('Editor de produto: ' + id + '\n(Em desenvolvimento)'); }
+        function editProduct(id) { alert('Product editor: ' + id + '\n(Em desenvolvimento)'); }
         function filterProducts() {
             const q = document.getElementById('prodSearch').value.toLowerCase();
             document.querySelectorAll('#productsTable tr:not(:first-child)').forEach(row => {

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Conta - AI Drop Store</title>
+    <title>My Account - AI Drop Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -51,9 +51,9 @@
 <body>
     <nav class="navbar">
         <div class="logo"><span class="ai">AI</span> DROP STORE</div>
-        <a href="/">Loja</a>
+        <a href="/">Store</a>
         <a href="/dashboard">Dashboard</a>
-        <a href="/conta" style="color:var(--red)">Minha Conta</a>
+        <a href="/conta" style="color:var(--red)">My Account</a>
     </nav>
 
     <div class="container">
@@ -61,8 +61,8 @@
         <div id="authSection">
             <div class="card">
                 <div class="tabs">
-                    <div class="tab active" onclick="showTab('login')">ENTRAR</div>
-                    <div class="tab" onclick="showTab('register')">CADASTRAR</div>
+                    <div class="tab active" onclick="showTab('login')">LOGIN</div>
+                    <div class="tab" onclick="showTab('register')">REGISTER</div>
                 </div>
                 <div id="msgBox" class="msg"></div>
 
@@ -70,30 +70,30 @@
                 <div id="loginForm">
                     <div class="form-group">
                         <label>Email</label>
-                        <input type="email" id="loginEmail" placeholder="seu@email.com">
+                        <input type="email" id="loginEmail" placeholder="your@email.com">
                     </div>
                     <div class="form-group">
-                        <label>Senha</label>
-                        <input type="password" id="loginPass" placeholder="Sua senha">
+                        <label>Password</label>
+                        <input type="password" id="loginPass" placeholder="Your password">
                     </div>
-                    <button class="btn btn-primary" onclick="doLogin()">ENTRAR</button>
+                    <button class="btn btn-primary" onclick="doLogin()">LOGIN</button>
                 </div>
 
                 <!-- Register -->
                 <div id="registerForm" style="display:none">
                     <div class="form-group">
-                        <label>Nome completo</label>
-                        <input type="text" id="regName" placeholder="Seu nome">
+                        <label>Full name</label>
+                        <input type="text" id="regName" placeholder="Your name">
                     </div>
                     <div class="form-group">
                         <label>Email</label>
-                        <input type="email" id="regEmail" placeholder="seu@email.com">
+                        <input type="email" id="regEmail" placeholder="your@email.com">
                     </div>
                     <div class="form-group">
-                        <label>Senha</label>
-                        <input type="password" id="regPass" placeholder="Mínimo 6 caracteres">
+                        <label>Password</label>
+                        <input type="password" id="regPass" placeholder="Minimum 6 characters">
                     </div>
-                    <button class="btn btn-primary" onclick="doRegister()">CRIAR CONTA</button>
+                    <button class="btn btn-primary" onclick="doRegister()">CREATE ACCOUNT</button>
                 </div>
             </div>
         </div>
@@ -101,28 +101,28 @@
         <!-- PROFILE SECTION -->
         <div id="profileSection">
             <div class="card">
-                <h2>Olá, <span id="userName">Cliente</span>!</h2>
+                <h2>Hello, <span id="userName">Cliente</span>!</h2>
                 <div class="stat-row">
                     <div class="stat">
                         <div class="num" id="totalOrders">0</div>
-                        <div class="label">PEDIDOS</div>
+                        <div class="label">ORDERS</div>
                     </div>
                     <div class="stat">
                         <div class="num" id="totalSpent">R$ 0</div>
-                        <div class="label">TOTAL GASTO</div>
+                        <div class="label">TOTAL SPENT</div>
                     </div>
                 </div>
                 <p style="font-size:13px; color:var(--gray-600); margin-bottom:12px" id="userEmail"></p>
             </div>
 
             <div class="card">
-                <h2>Meus Pedidos</h2>
+                <h2>My Orders</h2>
                 <div id="ordersList">
-                    <p style="color:var(--gray-400); text-align:center; padding:20px">Nenhum pedido ainda</p>
+                    <p style="color:var(--gray-400); text-align:center; padding:20px">No orders yet</p>
                 </div>
             </div>
 
-            <button class="btn btn-outline" onclick="doLogout()">SAIR DA CONTA</button>
+            <button class="btn btn-outline" onclick="doLogout()">LOGOUT</button>
         </div>
     </div>
 
@@ -152,14 +152,14 @@
             const name = document.getElementById('regName').value;
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPass').value;
-            if (!name || !email || !password) return showMsg('Preencha todos os campos', 'error');
-            if (password.length < 6) return showMsg('Senha deve ter no mínimo 6 caracteres', 'error');
+            if (!name || !email || !password) return showMsg('Please fill all fields', 'error');
+            if (password.length < 6) return showMsg('Password must be at least 6 characters', 'error');
             const r = await fetch('/api/register', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, email, password})});
             const d = await r.json();
             if (d.success) {
                 token = d.token;
                 localStorage.setItem('token', token);
-                showMsg('Conta criada com sucesso!', 'success');
+                showMsg('Account created successfully!', 'success');
                 setTimeout(loadProfile, 500);
             } else showMsg(d.error, 'error');
         }
@@ -167,7 +167,7 @@
         async function doLogin() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPass').value;
-            if (!email || !password) return showMsg('Preencha todos os campos', 'error');
+            if (!email || !password) return showMsg('Please fill all fields', 'error');
             const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password})});
             const d = await r.json();
             if (d.success) {

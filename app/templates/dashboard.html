@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 Dashboard Avançado - AI Drop Store</title>
+    <title>📊 Advanced Dashboard - AI Drop Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
@@ -112,55 +112,55 @@
 <body>
     <nav class="navbar">
         <div class="logo"><span class="ai">AI</span> DROP STORE</div>
-        <a href="/">Loja</a>
+        <a href="/">Store</a>
         <a href="/dashboard" class="active">📊 Dashboard</a>
-        <a href="/agents">🤖 Agentes</a>
-        <a href="/conta">👤 Conta</a>
+        <a href="/agents">🤖 Agents</a>
+        <a href="/conta">👤 Account</a>
     </nav>
     
     <div class="dash">
         <div class="dash-header">
-            <h1>📊 Dashboard Avançado v3.0</h1>
-            <p>{{ total_products }} produtos • 10 categorias • Fornecedores: CJ Dropshipping, AliExpress, Shein • {% if has_anthropic %}Anthropic Claude{% else %}Ollama{% endif %} • 🐘 PG {% if has_pg %}✓{% else %}○{% endif %} + 📁 SQLite ✓ ({{ db_size }})</p>
+            <h1>📊 Advanced Dashboard v4.0</h1>
+            <p>{{ total_products }} products • 10 categories • Suppliers: CJ Dropshipping, AliExpress, Shein • {% if has_anthropic %}Anthropic Claude{% else %}Ollama{% endif %} • 🐘 PG {% if has_pg %}✓{% else %}○{% endif %} + 📁 SQLite ✓ ({{ db_size }})</p>
         </div>
         
         <div class="metrics">
             <div class="metric">
                 <div class="icon">💰</div>
                 <div class="value" style="color:var(--success)">R$ {{ "%.0f"|format(stats.total_revenue) }}</div>
-                <div class="label">Receita Total</div>
+                <div class="label">Total Revenue</div>
                 <div class="change up">↑ +12% vs ontem</div>
             </div>
             <div class="metric">
                 <div class="icon">📈</div>
                 <div class="value" style="color:var(--warning)">R$ {{ "%.0f"|format(total_profit) }}</div>
-                <div class="label">Lucro Total</div>
-                <div class="change up">↑ Margem {{ avg_margin }}%</div>
+                <div class="label">Total Profit</div>
+                <div class="change up">↑ Margin {{ avg_margin }}%</div>
             </div>
             <div class="metric">
                 <div class="icon">📦</div>
                 <div class="value" style="color:var(--blue)">{{ stats.orders_count }}</div>
-                <div class="label">Pedidos</div>
+                <div class="label">Orders</div>
             </div>
             <div class="metric">
                 <div class="icon">👀</div>
                 <div class="value">{{ stats.visitors }}</div>
-                <div class="label">Visitantes</div>
+                <div class="label">Visitors</div>
             </div>
             <div class="metric">
                 <div class="icon">🎯</div>
                 <div class="value" style="color:var(--purple)">{{ total_products }}</div>
-                <div class="label">Produtos</div>
+                <div class="label">Products</div>
             </div>
             <div class="metric">
                 <div class="icon">🧠</div>
                 <div class="value" style="color:var(--pink)">{{ stats.ai_decisions }}</div>
-                <div class="label">Decisões IA</div>
+                <div class="label">AI Decisions</div>
             </div>
             <div class="metric">
                 <div class="icon">📱</div>
                 <div class="value" style="color:var(--success)">{{ social_stats.total_posts }}</div>
-                <div class="label">Posts Social</div>
+                <div class="label">Social Posts</div>
             </div>
             <div class="metric">
                 <div class="icon">💬</div>
@@ -172,13 +172,13 @@
         <!-- Charts Row -->
         <div class="grid-2">
             <div class="panel">
-                <h3>📈 Receita (30 dias)</h3>
+                <h3>📈 Revenue (30 days)</h3>
                 <div class="chart-container">
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
             <div class="panel">
-                <h3>🥧 Vendas por Categoria</h3>
+                <h3>🥧 Sales by Category</h3>
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
@@ -188,19 +188,19 @@
         <!-- Funnel + Suppliers -->
         <div class="grid-3">
             <div class="panel">
-                <h3>🔄 Funil de Conversão</h3>
+                <h3>🔄 Conversion Funnel</h3>
                 <div class="funnel">
                     {% set max_v = funnel.visitors if funnel.visitors > 0 else 1 %}
                     <div class="funnel-step">
-                        <span class="funnel-label">Visitantes</span>
+                        <span class="funnel-label">Visitors</span>
                         <div class="funnel-bar" style="width:100%;background:var(--gray-400)">{{ funnel.visitors }}</div>
                     </div>
                     <div class="funnel-step">
-                        <span class="funnel-label">Viram Produto</span>
+                        <span class="funnel-label">Viewed Product</span>
                         <div class="funnel-bar" style="width:{{ (funnel.product_views / max_v * 100)|int }}%;background:var(--blue)">{{ funnel.product_views }}</div>
                     </div>
                     <div class="funnel-step">
-                        <span class="funnel-label">Add Carrinho</span>
+                        <span class="funnel-label">Add to Cart</span>
                         <div class="funnel-bar" style="width:{{ (funnel.add_to_cart / max_v * 100)|int }}%;background:var(--warning)">{{ funnel.add_to_cart }}</div>
                     </div>
                     <div class="funnel-step">
@@ -208,20 +208,20 @@
                         <div class="funnel-bar" style="width:{{ (funnel.checkout / max_v * 100)|int }}%;background:var(--purple)">{{ funnel.checkout }}</div>
                     </div>
                     <div class="funnel-step">
-                        <span class="funnel-label">Compra</span>
+                        <span class="funnel-label">Purchase</span>
                         <div class="funnel-bar" style="width:{{ (funnel.purchase / max_v * 100)|int if funnel.purchase > 0 else 2 }}%;background:var(--success)">{{ funnel.purchase }}</div>
                     </div>
                 </div>
-                <p style="font-size:12px;color:var(--gray-400);margin-top:12px">Taxa conversão: {{ "%.1f"|format(funnel.purchase / max_v * 100) }}%</p>
+                <p style="font-size:12px;color:var(--gray-400);margin-top:12px">Conversion rate: {{ "%.1f"|format(funnel.purchase / max_v * 100) }}%</p>
             </div>
             
             <div class="panel">
-                <h3>🏭 Fornecedores</h3>
+                <h3>🏭 Suppliers</h3>
                 {% for name, data in suppliers.items() %}
                 <div class="supplier-item">
                     <div>
                         <div class="supplier-name">{{ name }}</div>
-                        <div class="supplier-count">{{ data.count }} produtos</div>
+                        <div class="supplier-count">{{ data.count }} products</div>
                     </div>
                     <div class="supplier-rev">R$ {{ "%.0f"|format(data.revenue) }}</div>
                 </div>
@@ -243,11 +243,11 @@
                     <span class="count">{{ social_stats.twitter_posts|default(0) }}</span>
                 </div>
                 <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-200)">
-                    <div style="font-size:12px;color:var(--gray-600)">Engajamento Total</div>
+                    <div style="font-size:12px;color:var(--gray-600)">Total Engagement</div>
                     <div style="font-size:22px;font-weight:900;color:var(--pink)">{{ social_stats.total_engagement }}</div>
                 </div>
                 <div style="margin-top:8px">
-                    <div style="font-size:12px;color:var(--gray-600)">Alcance Total</div>
+                    <div style="font-size:12px;color:var(--gray-600)">Total Reach</div>
                     <div style="font-size:22px;font-weight:900;color:var(--blue)">{{ social_stats.total_reach }}</div>
                 </div>
             </div>
@@ -255,7 +255,7 @@
         
         <!-- AI Team -->
         <div class="panel" style="margin-bottom:20px">
-            <h3>🤖 Equipe de IAs — Todas Online</h3>
+            <h3>🤖 AI Team — All Online</h3>
             <div class="ai-team-grid">
                 {% for key, ai in ai_employees.items() %}
                 <div class="ai-card">
@@ -271,22 +271,22 @@
         <!-- Products + Orders -->
         <div class="grid-2">
             <div class="panel">
-                <h3>🏆 Top 10 Mais Vendidos</h3>
+                <h3>🏆 Top 10 Best Sellers</h3>
                 {% for p in top_products %}
                 <div class="top-product">
                     <span class="rank">#{{ loop.index }}</span>
                     <span class="name">{{ p.name }}</span>
-                    <span class="sold">{{ p.sold }} vendas</span>
+                    <span class="sold">{{ p.sold }} sales</span>
                     <span class="revenue">R$ {{ "%.2f"|format(p.price) }}</span>
                 </div>
                 {% endfor %}
             </div>
             
             <div class="panel">
-                <h3>📦 Pedidos Recentes</h3>
+                <h3>📦 Recent Orders</h3>
                 <div style="overflow-x:auto">
                     <table>
-                        <tr><th>Pedido</th><th>Produto</th><th>Total</th><th>Lucro</th><th>Status</th></tr>
+                        <tr><th>Order</th><th>Product</th><th>Total</th><th>Profit</th><th>Status</th></tr>
                         {% for o in recent_orders[:12] %}
                         <tr>
                             <td style="font-weight:600">{{ o.id|default('?') }}</td>
@@ -307,7 +307,7 @@
         
         <!-- Activity Log -->
         <div class="panel" style="margin-top:20px">
-            <h3>🧠 Atividade das IAs em Tempo Real <span class="badge">Live</span></h3>
+            <h3>🧠 AI Activity in Real Time <span class="badge">Live</span></h3>
             <div class="activity-list">
                 {% for a in recent_activity %}
                 <div class="activity-item">
@@ -318,7 +318,7 @@
                 </div>
                 {% endfor %}
                 {% if not recent_activity %}
-                <p style="color:var(--gray-400); text-align:center; padding:20px;">As IAs estão inicializando...</p>
+                <p style="color:var(--gray-400); text-align:center; padding:20px;">AIs are initializing...</p>
                 {% endif %}
             </div>
         </div>
@@ -333,7 +333,7 @@
             data: {
                 labels: revenueData.map(d => d.day),
                 datasets: [{
-                    label: 'Receita (R$)',
+                    label: 'Revenue (R$)',
                     data: revenueData.map(d => d.revenue),
                     borderColor: '#E30613',
                     backgroundColor: 'rgba(227,6,19,0.1)',

@@ -16,13 +16,13 @@ CARTS = {}
 
 # Coupon system
 COUPONS = {
-    "PRIMEIRACOMPRA": {"type": "percent", "value": 10, "min_order": 0, "max_uses": 9999, "used": 0, "active": True, "description": "10% OFF primeira compra"},
-    "VOLTEI": {"type": "percent", "value": 5, "min_order": 0, "max_uses": 9999, "used": 0, "active": True, "description": "5% OFF para quem voltou"},
-    "NIKE20": {"type": "percent", "value": 20, "min_order": 200, "max_uses": 100, "used": 0, "active": True, "description": "20% OFF em Nike (mín R$200)"},
-    "FRETEGRATIS": {"type": "free_shipping", "value": 0, "min_order": 99, "max_uses": 500, "used": 0, "active": True, "description": "Frete grátis acima de R$99"},
-    "FLASH50": {"type": "fixed", "value": 50, "min_order": 300, "max_uses": 50, "used": 0, "active": True, "description": "R$50 OFF (mín R$300)"},
-    "AI10": {"type": "percent", "value": 10, "min_order": 50, "max_uses": 200, "used": 0, "active": True, "description": "10% OFF produtos de IA"},
-    "PIX5": {"type": "percent", "value": 5, "min_order": 0, "max_uses": 9999, "used": 0, "active": True, "description": "5% OFF pagamento PIX"},
+    "PRIMEIRACOMPRA": {"type": "percent", "value": 10, "min_order": 0, "max_uses": 9999, "used": 0, "active": True, "description": "10% OFF first purchase"},
+    "VOLTEI": {"type": "percent", "value": 5, "min_order": 0, "max_uses": 9999, "used": 0, "active": True, "description": "5% OFF for returning customers"},
+    "NIKE20": {"type": "percent", "value": 20, "min_order": 200, "max_uses": 100, "used": 0, "active": True, "description": "20% OFF Nike (min R$200)"},
+    "FRETEGRATIS": {"type": "free_shipping", "value": 0, "min_order": 99, "max_uses": 500, "used": 0, "active": True, "description": "Free shipping over R$99"},
+    "FLASH50": {"type": "fixed", "value": 50, "min_order": 300, "max_uses": 50, "used": 0, "active": True, "description": "R$50 OFF (min R$300)"},
+    "AI10": {"type": "percent", "value": 10, "min_order": 50, "max_uses": 200, "used": 0, "active": True, "description": "10% OFF AI products"},
+    "PIX5": {"type": "percent", "value": 5, "min_order": 0, "max_uses": 9999, "used": 0, "active": True, "description": "5% OFF PIX payment"},
 }
 
 # Flash Sales
@@ -43,7 +43,7 @@ SHIPPING_RATES = {
     "DF": {"name": "Distrito Federal", "standard": 21.90, "express": 37.90, "days_std": 5, "days_exp": 2},
     "PA": {"name": "Pará", "standard": 32.90, "express": 55.90, "days_std": 10, "days_exp": 5},
     "AM": {"name": "Amazonas", "standard": 39.90, "express": 65.90, "days_std": 12, "days_exp": 6},
-    "DEFAULT": {"name": "Outros", "standard": 29.90, "express": 49.90, "days_std": 10, "days_exp": 5},
+    "DEFAULT": {"name": "Other", "standard": 29.90, "express": 49.90, "days_std": 10, "days_exp": 5},
 }
 
 # CEP to state mapping (first 2 digits)
@@ -88,13 +88,13 @@ def calc_shipping(cep: str, cart_total: float) -> dict:
         "standard": {
             "price": 0 if free_shipping else rates["standard"],
             "days": rates["days_std"],
-            "name": "Padrão",
+            "name": "Standard",
             "free": free_shipping,
         },
         "express": {
             "price": rates["express"] * (0.5 if free_shipping else 1),
             "days": rates["days_exp"],
-            "name": "Expresso",
+            "name": "Express",
             "free": False,
         },
         "free_threshold": 199,
@@ -161,13 +161,13 @@ def apply_coupon(session_id: str, code: str) -> dict:
     code = code.upper().strip()
     
     if code not in COUPONS:
-        return {"success": False, "error": "Cupom inválido"}
+        return {"success": False, "error": "Invalid coupon"}
     
     coupon = COUPONS[code]
     if not coupon["active"]:
-        return {"success": False, "error": "Cupom expirado"}
+        return {"success": False, "error": "Coupon expired"}
     if coupon["used"] >= coupon["max_uses"]:
-        return {"success": False, "error": "Cupom esgotado"}
+        return {"success": False, "error": "Coupon sold out"}
     
     subtotal = sum(i["subtotal"] for i in cart["items"])
     if subtotal < coupon["min_order"]:

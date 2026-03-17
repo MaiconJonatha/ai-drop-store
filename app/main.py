@@ -475,7 +475,7 @@ async def ai_background_loop():
                     "id": oid, "product": prod["name"], "product_id": prod["id"],
                     "qty": qty, "total": round(prod["price"] * qty, 2),
                     "profit": round((prod["price"] - prod["supplier_price"]) * qty, 2),
-                    "status": random.choice(["Processando", "Enviado", "Em trânsito"]),
+                    "status": random.choice(["Processing", "Shipped", "In Transit"]),
                     "customer": f"Cliente #{random.randint(1000, 9999)}",
                     "handled_by": "Vega",
                     "supplier": prod.get("supplier", "AliExpress"),
@@ -548,7 +548,7 @@ async def product_detail(request: Request, product_id: str):
 async def buy_product(request: Request, product_id: str, qty: int = 1):
     product = next((p for p in PRODUCTS if p["id"] == product_id), None)
     if not product:
-        return JSONResponse({"error": "Produto não encontrado"}, 404)
+        return JSONResponse({"error": "Product not found"}, 404)
     if product["stock"] < qty:
         return JSONResponse({"error": "Estoque insuficiente"}, 400)
     
@@ -557,7 +557,7 @@ async def buy_product(request: Request, product_id: str, qty: int = 1):
         "id": oid, "product": product["name"], "product_id": product["id"],
         "qty": qty, "total": round(product["price"] * qty, 2),
         "profit": round((product["price"] - product["supplier_price"]) * qty, 2),
-        "status": "Processando",
+        "status": "Processing",
         "customer": f"Cliente #{random.randint(1000, 9999)}",
         "handled_by": "Vega",
     }
@@ -846,7 +846,7 @@ async def social_post_now(request: Request):
         post = await auto_post(product, platform)
         log_ai("Iris", "SOCIAL_MANUAL", f"📱 {platform}: {product['name']}")
         return JSONResponse({"success": True, "post": post})
-    return JSONResponse({"error": "Produto não encontrado"}, 404)
+    return JSONResponse({"error": "Product not found"}, 404)
 
 @app.get("/api/social/feed")
 async def social_feed():
@@ -945,7 +945,7 @@ async def api_add_to_cart(request: Request):
     data = await request.json()
     product = next((p for p in PRODUCTS if p["id"] == data.get("product_id")), None)
     if not product:
-        return JSONResponse({"error": "Produto não encontrado"}, 404)
+        return JSONResponse({"error": "Product not found"}, 404)
     cart = add_to_cart(data.get("session", ""), product, data.get("qty", 1))
     log_ai("Nova", "CART", f"🛒 Item adicionado: {product['name']}")
     return JSONResponse({"success": True, "cart": cart})
@@ -1024,7 +1024,7 @@ async def api_admin_login(request: Request):
 async def api_admin_overview(token: str = ""):
     admin = verify_admin(token)
     if not admin:
-        return JSONResponse({"error": "Não autorizado"}, 401)
+        return JSONResponse({"error": "Unauthorized"}, 401)
     review_stats = get_review_stats()
     cart_stats = get_cart_stats()
     return JSONResponse({
@@ -1042,13 +1042,13 @@ async def api_admin_overview(token: str = ""):
 @app.get("/api/admin/products")
 async def api_admin_products(token: str = ""):
     if not verify_admin(token):
-        return JSONResponse({"error": "Não autorizado"}, 401)
+        return JSONResponse({"error": "Unauthorized"}, 401)
     return JSONResponse({"products": PRODUCTS})
 
 @app.get("/api/admin/orders")
 async def api_admin_orders(token: str = ""):
     if not verify_admin(token):
-        return JSONResponse({"error": "Não autorizado"}, 401)
+        return JSONResponse({"error": "Unauthorized"}, 401)
     orders = ORDERS[-50:][::-1]
     return JSONResponse({"orders": orders})
 
@@ -1056,24 +1056,24 @@ async def api_admin_orders(token: str = ""):
 async def api_admin_update_order(request: Request):
     data = await request.json()
     if not verify_admin(data.get("token", "")):
-        return JSONResponse({"error": "Não autorizado"}, 401)
+        return JSONResponse({"error": "Unauthorized"}, 401)
     for o in ORDERS:
         if o.get("id") == data.get("order_id"):
             o["status"] = data.get("status", o["status"])
             log_ai("Vega", "ORDER_UPDATE", f"📦 {o['id']} → {o['status']}")
             return JSONResponse({"success": True})
-    return JSONResponse({"error": "Pedido não encontrado"}, 404)
+    return JSONResponse({"error": "Order not found"}, 404)
 
 @app.get("/api/admin/coupons")
 async def api_admin_coupons(token: str = ""):
     if not verify_admin(token):
-        return JSONResponse({"error": "Não autorizado"}, 401)
+        return JSONResponse({"error": "Unauthorized"}, 401)
     return JSONResponse({"coupons": COUPONS})
 
 @app.get("/api/admin/reviews")
 async def api_admin_reviews(token: str = ""):
     if not verify_admin(token):
-        return JSONResponse({"error": "Não autorizado"}, 401)
+        return JSONResponse({"error": "Unauthorized"}, 401)
     return JSONResponse({
         "stats": get_review_stats(),
         "pending": get_pending_reviews()[:20],
@@ -1083,7 +1083,7 @@ async def api_admin_reviews(token: str = ""):
 async def api_admin_moderate(request: Request):
     data = await request.json()
     if not verify_admin(data.get("token", "")):
-        return JSONResponse({"error": "Não autorizado"}, 401)
+        return JSONResponse({"error": "Unauthorized"}, 401)
     result = await moderate_review(data.get("review_id", ""), data.get("approved", True))
     return JSONResponse(result)
 

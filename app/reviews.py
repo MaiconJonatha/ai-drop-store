@@ -83,9 +83,9 @@ def generate_initial_reviews(products: list):
 def add_review(product_id: str, customer_name: str, rating: int, title: str, text: str, verified: bool = False) -> dict:
     """Add a new customer review"""
     if rating < 1 or rating > 5:
-        return {"success": False, "error": "Rating deve ser entre 1 e 5"}
+        return {"success": False, "error": "Rating must be between 1 and 5"}
     if len(text) < 5:
-        return {"success": False, "error": "Review muito curta (mín 5 caracteres)"}
+        return {"success": False, "error": "Review too short (min 5 characters)"}
     
     review = {
         "id": hashlib.md5(f"{product_id}{customer_name}{datetime.now()}".encode()).hexdigest()[:8],
@@ -146,7 +146,7 @@ async def moderate_review(review_id: str, approved: bool, ask_ai_fn=None) -> dic
             r["moderated"] = approved
             r["moderated_by"] = "Nova (IA)"
             return {"success": True, "review": r}
-    return {"success": False, "error": "Review não encontrada"}
+    return {"success": False, "error": "Review not found"}
 
 
 def get_pending_reviews() -> list:

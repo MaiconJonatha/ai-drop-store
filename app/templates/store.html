@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Drop Store — Nike + Anthropic + IA | Loja 100% IA</title>
-    <meta name="description" content="Loja de dropshipping 100% operada por Inteligência Artificial. Nike, Anthropic, Tech, Beleza e mais. 80+ produtos com preços dinâmicos.">
-    <meta name="keywords" content="dropshipping, IA, Nike, Anthropic, Claude, loja inteligente, AI store">
-    <meta property="og:title" content="AI Drop Store — Dropshipping 100% IA">
-    <meta property="og:description" content="80+ produtos geridos por 6 IAs. Nike + Anthropic + Tech. PWA instalável!">
+    <title>AI Drop Store — Nike + Anthropic + AI | 100% AI-Powered Store</title>
+    <meta name="description" content="100% AI-powered dropshipping store. Nike, Anthropic, Tech, Beauty and more. 80+ products with dynamic pricing.">
+    <meta name="keywords" content="dropshipping, AI, Nike, Anthropic, Claude, smart store, AI store">
+    <meta property="og:title" content="AI Drop Store — 100% AI Dropshipping">
+    <meta property="og:description" content="80+ products managed by 6 AIs. Nike + Anthropic + Tech. Installable PWA!">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://ai-drop-store-nd4f.onrender.com">
     <meta name="twitter:card" content="summary_large_image">
@@ -272,34 +272,34 @@
 </head>
 <body>
     <div class="top-bar">
-        LOJA 100% OPERADA POR <span>INTELIGÊNCIA ARTIFICIAL</span> — NIKE + ANTHROPIC + 80 PRODUTOS — 10 CATEGORIAS — PWA INSTALÁVEL
+        STORE 100% OPERATED BY <span>ARTIFICIAL INTELLIGENCE</span> — NIKE + ANTHROPIC + 80 PRODUCTS — 10 CATEGORIES — INSTALLABLE PWA
     </div>
     
     <!-- PWA Install Banner -->
     <div class="pwa-banner" id="pwaBanner">
-        <span>📱 Instale o app no celular!</span>
-        <button onclick="installPWA()">INSTALAR</button>
+        <span>📱 Install the app on your phone!</span>
+        <button onclick="installPWA()">INSTALL</button>
         <span onclick="document.getElementById('pwaBanner').style.display='none'" style="cursor:pointer">✕</span>
     </div>
     
     <nav class="navbar">
         <div class="logo"><span class="ai">AI</span> DROP STORE</div>
         <form class="search-box" action="/" method="get">
-            <input type="text" name="q" placeholder="Buscar Nike, Anthropic, Tech..." value="{{ search_query }}">
+            <input type="text" name="q" placeholder="Search Nike, Anthropic, Tech..." value="{{ search_query }}">
             <button type="submit">🔍</button>
         </form>
         <div class="nav-links">
-            <a href="/">Loja</a>
+            <a href="/">Store</a>
             <a href="/dashboard">📊 Dashboard</a>
-            <a href="/agents">🤖 Agentes</a>
-            <a href="/carrinho">🛒 Carrinho <span id="cartBadge" style="background:var(--red);color:white;padding:1px 6px;border-radius:10px;font-size:11px">0</span></a>
-            <a href="/conta">👤 Conta</a>
+            <a href="/agents">🤖 Agents</a>
+            <a href="/carrinho">🛒 Cart <span id="cartBadge" style="background:var(--red);color:white;padding:1px 6px;border-radius:10px;font-size:11px">0</span></a>
+            <a href="/conta">👤 Account</a>
             <a href="/admin">🔐</a>
         </div>
     </nav>
     
     <div class="ai-strip">
-        <span class="ai-strip-label">IAs Online:</span>
+        <span class="ai-strip-label">AIs Online:</span>
         {% for key, ai in ai_employees.items() %}
         <div class="ai-chip">
             <span class="dot"></span>
@@ -310,33 +310,33 @@
     
     <div class="hero">
         <h1>JUST <span class="highlight">DROP</span> IT.</h1>
-        <p>A primeira loja do mundo de dropshipping 100% operada por IAs. 80+ produtos, 10 categorias, 6 fornecedores reais. Instale o app no celular!</p>
+        <p>The world's first 100% AI-operated dropshipping store. 80+ products, 10 categories, 6 real suppliers. Install the app on your phone!</p>
         <div class="hero-stats">
             <div class="hero-stat">
                 <div class="num">{{ stats.products_curated|int }}</div>
-                <div class="label">Produtos IA</div>
+                <div class="label">AI Products</div>
             </div>
             <div class="hero-stat">
                 <div class="num">{{ stats.visitors|int }}</div>
-                <div class="label">Visitantes</div>
+                <div class="label">Visitors</div>
             </div>
             <div class="hero-stat">
                 <div class="num">{{ stats.orders_count|int }}</div>
-                <div class="label">Pedidos</div>
+                <div class="label">Orders</div>
             </div>
             <div class="hero-stat">
                 <div class="num">R$ {{ "%.0f"|format(stats.total_revenue) }}</div>
-                <div class="label">Receita</div>
+                <div class="label">Revenue</div>
             </div>
             <div class="hero-stat">
                 <div class="num">{{ stats.ai_decisions|int }}</div>
-                <div class="label">Decisões IA</div>
+                <div class="label">AI Decisions</div>
             </div>
         </div>
     </div>
     
     <div class="categories">
-        <a href="/" class="cat-btn {% if not current_cat %}active{% endif %}">Todos</a>
+        <a href="/" class="cat-btn {% if not current_cat %}active{% endif %}">All</a>
         {% for cat in categories %}
         <a href="/?cat={{ cat.id }}" class="cat-btn {% if current_cat == cat.id %}active{% endif %}">
             {{ cat.icon }} {{ cat.name }}
@@ -345,13 +345,13 @@
     </div>
     
     <div class="sort-bar">
-        <span>Ordenar:</span>
-        <a href="/?cat={{ current_cat or '' }}&sort=popular" class="sort-btn {% if current_sort == 'popular' %}active{% endif %}">Mais Vendidos</a>
-        <a href="/?cat={{ current_cat or '' }}&sort=price_asc" class="sort-btn {% if current_sort == 'price_asc' %}active{% endif %}">Menor Preço</a>
-        <a href="/?cat={{ current_cat or '' }}&sort=price_desc" class="sort-btn {% if current_sort == 'price_desc' %}active{% endif %}">Maior Preço</a>
-        <a href="/?cat={{ current_cat or '' }}&sort=rating" class="sort-btn {% if current_sort == 'rating' %}active{% endif %}">Avaliação</a>
-        <a href="/?cat={{ current_cat or '' }}&sort=discount" class="sort-btn {% if current_sort == 'discount' %}active{% endif %}">Desconto</a>
-        <span class="product-count">{{ products|length }} produtos</span>
+        <span>Sort by:</span>
+        <a href="/?cat={{ current_cat or '' }}&sort=popular" class="sort-btn {% if current_sort == 'popular' %}active{% endif %}">Best Sellers</a>
+        <a href="/?cat={{ current_cat or '' }}&sort=price_asc" class="sort-btn {% if current_sort == 'price_asc' %}active{% endif %}">Lowest Price</a>
+        <a href="/?cat={{ current_cat or '' }}&sort=price_desc" class="sort-btn {% if current_sort == 'price_desc' %}active{% endif %}">Highest Price</a>
+        <a href="/?cat={{ current_cat or '' }}&sort=rating" class="sort-btn {% if current_sort == 'rating' %}active{% endif %}">Rating</a>
+        <a href="/?cat={{ current_cat or '' }}&sort=discount" class="sort-btn {% if current_sort == 'discount' %}active{% endif %}">Discount</a>
+        <span class="product-count">{{ products|length }} products</span>
     </div>
     
     <div class="products-grid">
@@ -359,7 +359,7 @@
         <div class="product-card" onclick="window.location='/product/{{ p.id }}'">
             <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">
             <div class="badge-row">
-                <span class="sold-tag">🔥 {{ p.sold }} vendidos</span>
+                <span class="sold-tag">🔥 {{ p.sold }} sold</span>
                 <span class="discount-tag">-{{ p.discount }}%</span>
             </div>
             <div class="product-info">
@@ -377,7 +377,7 @@
                     <span class="price-old">R$ {{ "%.2f"|format(p.old_price) }}</span>
                 </div>
                 <div class="product-footer">
-                    <span class="shipping">🚚 {{ p.shipping_days }} dias</span>
+                    <span class="shipping">🚚 {{ p.shipping_days }} days</span>
                     <button class="buy-btn" onclick="event.stopPropagation(); addToCart('{{ p.id }}', '{{ p.name }}')" title="Adicionar ao carrinho">
                         🛒 ADD
                     </button>
@@ -390,18 +390,18 @@
     {% if not products %}
     <div class="empty">
         <div style="font-size:64px">🔍</div>
-        <h2>Nenhum produto encontrado</h2>
-        <p>Tente outra busca ou categoria</p>
+        <h2>No products found</h2>
+        <p>Try another search or category</p>
     </div>
     {% endif %}
     
     <!-- Newsletter -->
     <div class="newsletter">
-        <h2>📧 Receba Ofertas Exclusivas</h2>
-        <p>A IA Aria envia as melhores ofertas toda semana direto no seu email</p>
+        <h2>📧 Get Exclusive Deals</h2>
+        <p>AI Aria sends the best deals every week straight to your inbox</p>
         <div class="newsletter-form">
             <input type="email" id="nlEmail" placeholder="seu@email.com">
-            <button onclick="subscribe()">INSCREVER</button>
+            <button onclick="subscribe()">SUBSCRIBE</button>
         </div>
         <p id="nlMsg" style="margin-top:10px;color:var(--success)"></p>
     </div>
@@ -415,15 +415,15 @@
             <div class="chat-header">
                 <span style="font-size:24px">🎧</span>
                 <div>
-                    <h4>Nova — Suporte IA 24/7</h4>
-                    <small>Online agora • Chat + WhatsApp</small>
+                    <h4>Nova — AI Support 24/7</h4>
+                    <small>Online now • Chat + WhatsApp</small>
                 </div>
             </div>
             <div class="chat-messages" id="chatMessages">
-                <div class="msg ai">Olá! Sou a Nova, assistente IA da loja. Também estou no WhatsApp! Como posso ajudar? 😊</div>
+                <div class="msg ai">Hi! I'm Nova, the store's AI assistant. I'm also on WhatsApp! How can I help? 😊</div>
             </div>
             <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="Digite sua mensagem..." onkeypress="if(event.key==='Enter')sendChat()">
+                <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendChat()">
                 <button onclick="sendChat()">➤</button>
             </div>
         </div>
@@ -434,8 +434,8 @@
     
     <footer class="footer">
         <h3>AI DROP STORE</h3>
-        <p>Dropshipping 100% operado por Inteligência Artificial. 80+ produtos, 10 categorias, fornecedores reais (CJ Dropshipping, AliExpress, Shein).
-           Powered by Claude AI + Ollama. PWA instalável.</p>
+        <p>Dropshipping 100% operated by Artificial Intelligence. 80+ products, 10 categories, real suppliers (CJ Dropshipping, AliExpress, Shein).
+           Powered by Claude AI + Ollama. Installable PWA.</p>
         <div class="footer-team">
             {% for key, ai in ai_employees.items() %}
             <div class="footer-ai">
@@ -457,7 +457,7 @@
                 <span class="tech-badge">⚡ FastAPI</span>
             </div>
             <br>
-            <span>© 2026 AI Drop Store — v3.0</span>
+            <span>© 2026 AI Drop Store — v4.0</span>
         </div>
     </footer>
     
@@ -501,7 +501,7 @@
                 const data = await r.json();
                 messages.innerHTML += '<div class="msg ai">' + data.response + '</div>';
             } catch(e) {
-                messages.innerHTML += '<div class="msg ai">Desculpe, tive um problema. Tente novamente!</div>';
+                messages.innerHTML += '<div class="msg ai">Sorry, I had a problem. Try again!</div>';
             }
             messages.scrollTop = messages.scrollHeight;
         }
@@ -516,7 +516,7 @@
                 });
                 const d = await r.json();
                 if (d.success) {
-                    showToast('🛒 ' + name + ' adicionado ao carrinho!');
+                    showToast('🛒 ' + name + ' added to cart!');
                     updateCartBadge();
                     gtag('event', 'add_to_cart', {currency: 'BRL', items: [{item_name: name}]});
                 }
@@ -549,7 +549,7 @@
             try {
                 const r = await fetch('/api/email/subscribe', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email})});
                 const d = await r.json();
-                document.getElementById('nlMsg').textContent = d.success ? '✅ Inscrito! Check seu email.' : d.error;
+                document.getElementById('nlMsg').textContent = d.success ? '✅ Subscribed! Check your email.' : d.error;
                 gtag('event', 'newsletter_signup');
             } catch(e) {}
         }

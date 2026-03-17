@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 Multi-Agentes - AI Drop Store</title>
+    <title>🤖 Multi-Agents - AI Drop Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -151,22 +151,22 @@
     <nav class="navbar">
         <div class="logo">AI <span>DROP STORE</span></div>
         <div class="nav-links">
-            <a href="/">Loja</a>
+            <a href="/">Store</a>
             <a href="/dashboard">Dashboard</a>
-            <a href="/agents" class="active">🤖 Multi-Agentes</a>
-            <a href="/conta">Conta</a>
+            <a href="/agents" class="active">🤖 Multi-Agents</a>
+            <a href="/conta">Account</a>
         </div>
     </nav>
 
     <div class="hero-agents">
-        <h1>SISTEMA <span class="highlight">MULTI-AGENTES</span></h1>
-        <p class="sub">6 IAs autônomas + decisões colaborativas + comunicação em tempo real | {% if has_anthropic %}Anthropic Claude{% else %}Ollama{% endif %}</p>
+        <h1>MULTI-AGENT <span class="highlight">SYSTEM</span></h1>
+        <p class="sub">6 autonomous AIs + collaborative decisions + real-time communication | {% if has_anthropic %}Anthropic Claude{% else %}Ollama{% endif %}</p>
     </div>
 
     <div class="container">
         <!-- Architecture -->
         <div class="arch-diagram">
-            <h3>🏗️ ARQUITETURA MULTI-AGENTES</h3>
+            <h3>🏗️ MULTI-AGENT ARCHITECTURE</h3>
             <div class="arch-flow">
                 <div class="arch-node">👩‍💼 Luna (CEO)</div>
                 <span class="arch-arrow">⟷</span>
@@ -181,14 +181,14 @@
                 <span class="arch-arrow">⟷</span>
                 <div class="arch-node" style="border-color:var(--purple)">📨 Message Bus</div>
                 <span class="arch-arrow">⟷</span>
-                <div class="arch-node" style="border-color:var(--green)">⚡ Decisões Colaborativas</div>
+                <div class="arch-node" style="border-color:var(--green)">⚡ Collaborative Decisions</div>
             </div>
             <div class="arch-flow" style="margin-top:8px">
-                <div class="arch-node">🎧 Nova (Suporte)</div>
+                <div class="arch-node">🎧 Nova (Support)</div>
                 <span class="arch-arrow">⟷</span>
-                <div class="arch-node">🚚 Vega (Logística)</div>
+                <div class="arch-node">🚚 Vega (Logistics)</div>
                 <span class="arch-arrow">⟷</span>
-                <div class="arch-node" style="border-color:var(--red)">🛒 Catálogo (37 produtos)</div>
+                <div class="arch-node" style="border-color:var(--red)">🛒 Catalog (37 products)</div>
             </div>
         </div>
 
@@ -210,7 +210,7 @@
                         {% endfor %}
                     {% else %}
                     <span class="num">0</span>
-                    Inicializando...
+                    Initializing...
                     {% endif %}
                 </div>
             </div>
@@ -220,7 +220,7 @@
         <!-- Messages + Decisions -->
         <div class="grid-2">
             <div class="panel">
-                <h3>📨 Comunicação Inter-Agentes (Message Bus)</h3>
+                <h3>📨 Inter-Agent Communication (Message Bus)</h3>
                 <div class="msg-list">
                     {% for m in messages %}
                     <div class="msg {{ m.type }}">
@@ -235,13 +235,13 @@
                     </div>
                     {% endfor %}
                     {% if not messages %}
-                    <p style="color:var(--gray); text-align:center; padding:40px;">Sistema inicializando... As IAs começarão a se comunicar em breve.</p>
+                    <p style="color:var(--gray); text-align:center; padding:40px;">System initializing... The AIs will start communicating soon.</p>
                     {% endif %}
                 </div>
             </div>
 
             <div class="panel">
-                <h3>⚡ Decisões Colaborativas</h3>
+                <h3>⚡ Collaborative Decisions</h3>
                 <div class="msg-list">
                     {% for d in decisions %}
                     <div class="decision-item">
@@ -253,7 +253,7 @@
                     </div>
                     {% endfor %}
                     {% if not decisions %}
-                    <p style="color:var(--gray); text-align:center; padding:40px;">Decisões colaborativas serão tomadas a cada 5 minutos...</p>
+                    <p style="color:var(--gray); text-align:center; padding:40px;">Collaborative decisions will be made every 5 minutes...</p>
                     {% endif %}
                 </div>
             </div>
@@ -262,7 +262,7 @@
         <!-- Knowledge Base + Trends -->
         <div class="grid-2">
             <div class="panel">
-                <h3>🧠 Knowledge Base (Memória Compartilhada)</h3>
+                <h3>🧠 Knowledge Base (Shared Memory)</h3>
                 <div class="fact-grid">
                     {% for key, f in facts.items() %}
                     <div class="fact">
@@ -278,13 +278,13 @@
                     </div>
                     {% endfor %}
                     {% if not facts %}
-                    <p style="color:var(--gray); grid-column:span 2; text-align:center; padding:20px;">Coletando dados...</p>
+                    <p style="color:var(--gray); grid-column:span 2; text-align:center; padding:20px;">Collecting data...</p>
                     {% endif %}
                 </div>
             </div>
 
             <div class="panel">
-                <h3>📈 Tendências Detectadas</h3>
+                <h3>📈 Detected Trends</h3>
                 {% for t in trends %}
                 <div class="trend-item">
                     <span class="dir">{% if t.direction == 'up' %}📈{% elif t.direction == 'trending' %}🔥{% else %}➡️{% endif %}</span>
@@ -294,7 +294,7 @@
                 </div>
                 {% endfor %}
                 {% if not trends %}
-                <p style="color:var(--gray); text-align:center; padding:40px;">Analisando tendências...</p>
+                <p style="color:var(--gray); text-align:center; padding:40px;">Analyzing trends...</p>
                 {% endif %}
             </div>
         </div>

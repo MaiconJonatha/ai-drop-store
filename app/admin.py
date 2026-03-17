@@ -32,10 +32,10 @@ ADMIN_SESSIONS = {}  # token -> {email, name, role, created_at}
 def admin_login(email: str, password: str) -> dict:
     admin = ADMIN_USERS.get(email)
     if not admin:
-        return {"success": False, "error": "Admin não encontrado"}
+        return {"success": False, "error": "Admin not found"}
     
     if hashlib.sha256(password.encode()).hexdigest() != admin["password_hash"]:
-        return {"success": False, "error": "Senha incorreta"}
+        return {"success": False, "error": "Incorrect password"}
     
     token = hashlib.sha256(f"{email}{datetime.now()}".encode()).hexdigest()
     ADMIN_SESSIONS[token] = {
