@@ -7,12 +7,13 @@ Powered by: Anthropic Claude + Ollama (fallback) + SQLite
 6 AI Employees:
 - Luna (Claude Sonnet) - CEO & Product Manager
 - Aria (Claude Haiku) - Copywriter & Marketing  
-- Nova (Claude Haiku) - Customer Support
+- Nova (Claude Haiku) - Customer Support + WhatsApp Bot
 - Zara (Claude Haiku) - Pricing & Analytics
-- Iris (Claude Haiku) - Social Media Manager
+- Iris (Claude Haiku) - Social Media Manager (Instagram/TikTok/Twitter)
 - Vega (Claude Sonnet) - Supply Chain & Logistics
 
-Brands: Nike, Anthropic, Generic
+Features: Nike + Anthropic + 80+ Products, PWA, WhatsApp Bot, Email Marketing,
+         Social Media Auto-posting, Advanced Dashboard, Google Analytics
 """
 
 import asyncio
@@ -20,7 +21,8 @@ import json
 import random
 import hashlib
 import os
-from datetime import datetime
+import re
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -30,7 +32,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-app = FastAPI(title="AI Drop Store", version="2.0")
+app = FastAPI(title="AI Drop Store", version="3.0")
 PORT = int(os.environ.get("PORT", 8020))
 
 BASE = Path(__file__).parent
@@ -41,6 +43,7 @@ templates = Jinja2Templates(directory=BASE / "templates")
 
 OLLAMA = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+GA_MEASUREMENT_ID = os.environ.get("GA_MEASUREMENT_ID", "G-XXXXXXXXXX")
 
 # ─── AI Employees ───
 AI_EMPLOYEES = {
@@ -50,18 +53,18 @@ AI_EMPLOYEES = {
     "aria": {"name": "Aria", "role": "Copywriter & Marketing", "model": "claude-haiku-4-5-20251001",
              "ollama_model": "gemma2:2b", "avatar": "✍️", "color": "#EC4899",
              "specialty": "textos persuasivos e campanhas"},
-    "nova": {"name": "Nova", "role": "Suporte ao Cliente", "model": "claude-haiku-4-5-20251001",
+    "nova": {"name": "Nova", "role": "Suporte ao Cliente + WhatsApp", "model": "claude-haiku-4-5-20251001",
              "ollama_model": "phi3:mini", "avatar": "🎧", "color": "#06B6D4",
-             "specialty": "atendimento e resolução de problemas"},
+             "specialty": "atendimento 24/7 via chat e WhatsApp"},
     "zara": {"name": "Zara", "role": "Pricing & Analytics", "model": "claude-haiku-4-5-20251001",
              "ollama_model": "qwen2:1.5b", "avatar": "📊", "color": "#F59E0B",
-             "specialty": "precificação e análise de dados"},
+             "specialty": "precificação dinâmica e análise de dados"},
     "iris": {"name": "Iris", "role": "Social Media Manager", "model": "claude-haiku-4-5-20251001",
              "ollama_model": "tinyllama", "avatar": "📱", "color": "#10B981",
-             "specialty": "redes sociais e engajamento"},
+             "specialty": "Instagram, TikTok e Twitter automatizados"},
     "vega": {"name": "Vega", "role": "Supply Chain & Logistics", "model": "claude-sonnet-4-20250514",
              "ollama_model": "mistral:7b-instruct", "avatar": "🚚", "color": "#EF4444",
-             "specialty": "logística e fornecedores"},
+             "specialty": "logística, fornecedores e rastreamento"},
 }
 
 # ─── Categories ───
@@ -74,9 +77,11 @@ CATEGORIES = [
     {"id": "fitness", "name": "Fitness & Esporte", "icon": "💪", "emoji": "🏋️"},
     {"id": "pets", "name": "Pets", "icon": "🐾", "emoji": "🐕"},
     {"id": "ai", "name": "AI & Anthropic", "icon": "🤖", "emoji": "🧠"},
+    {"id": "gaming", "name": "Games & Geek", "icon": "🎮", "emoji": "🕹️"},
+    {"id": "food", "name": "Alimentos & Suplementos", "icon": "🥤", "emoji": "💊"},
 ]
 
-# In-memory cache (loaded from SQL at startup)
+# In-memory cache
 PRODUCTS = []
 ORDERS = []
 AI_ACTIVITY_LOG = []
@@ -88,7 +93,6 @@ STORE_STATS = {
 # ─── AI Helpers ───
 
 async def ask_claude(prompt: str, max_tokens: int = 300) -> str:
-    """Ask Anthropic Claude API"""
     if not ANTHROPIC_KEY:
         return ""
     try:
@@ -103,14 +107,12 @@ async def ask_claude(prompt: str, max_tokens: int = 300) -> str:
                 "content-type": "application/json"
             })
             if r.status_code == 200:
-                data = r.json()
-                return data["content"][0]["text"].strip()
+                return r.json()["content"][0]["text"].strip()
     except Exception:
         pass
     return ""
 
 async def ask_ollama(model: str, prompt: str, max_tokens: int = 300) -> str:
-    """Ask Ollama local"""
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             r = await client.post(f"{OLLAMA}/api/generate", json={
@@ -124,13 +126,10 @@ async def ask_ollama(model: str, prompt: str, max_tokens: int = 300) -> str:
     return ""
 
 async def ask_ai(employee_key: str, prompt: str, max_tokens: int = 300) -> str:
-    """Try Claude first, fallback to Ollama"""
     emp = AI_EMPLOYEES[employee_key]
-    # Try Anthropic Claude
     result = await ask_claude(prompt, max_tokens)
     if result:
         return result
-    # Fallback to Ollama
     result = await ask_ollama(emp["ollama_model"], prompt, max_tokens)
     return result
 
@@ -144,64 +143,122 @@ def log_ai(ai_name: str, action: str, detail: str):
     STORE_STATS["ai_decisions"] += 1
 
 def make_image_url(name: str, cat: str) -> str:
-    seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16)
-    # Dark backgrounds for Nike-style white layout
     cat_colors = {
         "nike": "111111", "ai": "2D1B69", "tech": "1a1a2e",
         "beauty": "4A0E2E", "home": "1B3A2D", "fashion": "2E1A1A",
-        "fitness": "1A2E3A", "pets": "3A2E1A",
+        "fitness": "1A2E3A", "pets": "3A2E1A", "gaming": "1A1A3A",
+        "food": "2E3A1A",
     }
     color = cat_colors.get(cat, "111111")
     label = name[:18].replace(' ', '+')
     return f"https://placehold.co/400x400/{color}/ffffff?text={label}"
 
-# ─── Product Catalog ───
+# ─── MEGA Product Catalog (80+ products with real suppliers) ───
 INITIAL_PRODUCTS = [
-    # NIKE
-    {"name": "Nike Air Max 90", "cat": "nike", "brand": "Nike", "base_price": 599.90, "supplier_price": 180.00},
-    {"name": "Nike Air Force 1 Low", "cat": "nike", "brand": "Nike", "base_price": 549.90, "supplier_price": 165.00},
-    {"name": "Nike Dunk Low Panda", "cat": "nike", "brand": "Nike", "base_price": 649.90, "supplier_price": 195.00},
-    {"name": "Nike Air Jordan 1 Mid", "cat": "nike", "brand": "Nike", "base_price": 799.90, "supplier_price": 240.00},
-    {"name": "Nike Revolution 7", "cat": "nike", "brand": "Nike", "base_price": 349.90, "supplier_price": 105.00},
-    {"name": "Nike Blazer Mid 77", "cat": "nike", "brand": "Nike", "base_price": 499.90, "supplier_price": 150.00},
-    {"name": "Nike Cortez Classic", "cat": "nike", "brand": "Nike", "base_price": 449.90, "supplier_price": 135.00},
-    {"name": "Nike Pegasus 41", "cat": "nike", "brand": "Nike", "base_price": 699.90, "supplier_price": 210.00},
-    {"name": "Camiseta Nike Dri-FIT", "cat": "nike", "brand": "Nike", "base_price": 149.90, "supplier_price": 35.00},
-    {"name": "Shorts Nike Flex", "cat": "nike", "brand": "Nike", "base_price": 129.90, "supplier_price": 30.00},
-    {"name": "Mochila Nike Brasilia", "cat": "nike", "brand": "Nike", "base_price": 199.90, "supplier_price": 55.00},
-    {"name": "Boné Nike Club Cap", "cat": "nike", "brand": "Nike", "base_price": 99.90, "supplier_price": 22.00},
-    # AI & ANTHROPIC
-    {"name": "Curso IA com Claude API", "cat": "ai", "brand": "Anthropic", "base_price": 297.00, "supplier_price": 50.00},
-    {"name": "Pack Prompts Anthropic Pro", "cat": "ai", "brand": "Anthropic", "base_price": 147.00, "supplier_price": 20.00},
-    {"name": "Template Chatbot Claude", "cat": "ai", "brand": "Anthropic", "base_price": 97.00, "supplier_price": 15.00},
-    {"name": "Ebook: IA para Negócios", "cat": "ai", "brand": "Anthropic", "base_price": 49.90, "supplier_price": 5.00},
-    {"name": "API Credits Claude Haiku", "cat": "ai", "brand": "Anthropic", "base_price": 197.00, "supplier_price": 80.00},
-    {"name": "Automação MCP Server Kit", "cat": "ai", "brand": "Anthropic", "base_price": 397.00, "supplier_price": 60.00},
-    # TECH
-    {"name": "Fone Bluetooth Pro Max", "cat": "tech", "brand": "", "base_price": 29.90, "supplier_price": 8.50},
-    {"name": "Ring Light LED 26cm", "cat": "tech", "brand": "", "base_price": 49.90, "supplier_price": 15.00},
-    {"name": "Smartwatch Fitness Y68", "cat": "tech", "brand": "", "base_price": 79.90, "supplier_price": 22.00},
-    {"name": "Hub USB-C 7 em 1", "cat": "tech", "brand": "", "base_price": 89.90, "supplier_price": 25.00},
-    {"name": "Mini Projetor LED", "cat": "tech", "brand": "", "base_price": 199.90, "supplier_price": 65.00},
-    # BEAUTY
-    {"name": "Sérum Vitamina C 30ml", "cat": "beauty", "brand": "", "base_price": 39.90, "supplier_price": 9.00},
-    {"name": "Massageador Facial Jade", "cat": "beauty", "brand": "", "base_price": 34.90, "supplier_price": 7.50},
-    {"name": "Kit Pincéis Maquiagem 12pcs", "cat": "beauty", "brand": "", "base_price": 44.90, "supplier_price": 11.00},
-    # HOME
-    {"name": "Luminária LED Lua 3D", "cat": "home", "brand": "", "base_price": 69.90, "supplier_price": 20.00},
-    {"name": "Umidificador Ultrassônico", "cat": "home", "brand": "", "base_price": 59.90, "supplier_price": 17.00},
-    # FASHION
-    {"name": "Bolsa Crossbody Minimalista", "cat": "fashion", "brand": "", "base_price": 54.90, "supplier_price": 15.00},
-    {"name": "Óculos de Sol Polarizado", "cat": "fashion", "brand": "", "base_price": 39.90, "supplier_price": 8.00},
-    {"name": "Relógio Analógico Vintage", "cat": "fashion", "brand": "", "base_price": 69.90, "supplier_price": 19.00},
-    # FITNESS
-    {"name": "Corda de Pular Speed Rope", "cat": "fitness", "brand": "", "base_price": 29.90, "supplier_price": 6.00},
-    {"name": "Faixa Elástica Kit 5 Níveis", "cat": "fitness", "brand": "", "base_price": 39.90, "supplier_price": 10.00},
-    {"name": "Garrafa Motivacional 2L", "cat": "fitness", "brand": "", "base_price": 34.90, "supplier_price": 8.00},
-    # PETS
-    {"name": "Bebedouro Fonte Automática", "cat": "pets", "brand": "", "base_price": 79.90, "supplier_price": 24.00},
-    {"name": "Brinquedo Interativo Gato", "cat": "pets", "brand": "", "base_price": 29.90, "supplier_price": 7.00},
-    {"name": "Coleira GPS Rastreador", "cat": "pets", "brand": "", "base_price": 129.90, "supplier_price": 42.00},
+    # ═══ NIKE (15 products) - Supplier: CJ Dropshipping / AliExpress ═══
+    {"name": "Nike Air Max 90", "cat": "nike", "brand": "Nike", "base_price": 599.90, "supplier_price": 180.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Air Force 1 Low", "cat": "nike", "brand": "Nike", "base_price": 549.90, "supplier_price": 165.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Dunk Low Panda", "cat": "nike", "brand": "Nike", "base_price": 649.90, "supplier_price": 195.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Air Jordan 1 Mid", "cat": "nike", "brand": "Nike", "base_price": 799.90, "supplier_price": 240.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Revolution 7", "cat": "nike", "brand": "Nike", "base_price": 349.90, "supplier_price": 105.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Blazer Mid 77", "cat": "nike", "brand": "Nike", "base_price": 499.90, "supplier_price": 150.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Cortez Classic", "cat": "nike", "brand": "Nike", "base_price": 449.90, "supplier_price": 135.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Pegasus 41", "cat": "nike", "brand": "Nike", "base_price": 699.90, "supplier_price": 210.00, "supplier": "CJ Dropshipping"},
+    {"name": "Camiseta Nike Dri-FIT", "cat": "nike", "brand": "Nike", "base_price": 149.90, "supplier_price": 35.00, "supplier": "CJ Dropshipping"},
+    {"name": "Shorts Nike Flex", "cat": "nike", "brand": "Nike", "base_price": 129.90, "supplier_price": 30.00, "supplier": "CJ Dropshipping"},
+    {"name": "Mochila Nike Brasilia", "cat": "nike", "brand": "Nike", "base_price": 199.90, "supplier_price": 55.00, "supplier": "CJ Dropshipping"},
+    {"name": "Boné Nike Club Cap", "cat": "nike", "brand": "Nike", "base_price": 99.90, "supplier_price": 22.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Air Max 270", "cat": "nike", "brand": "Nike", "base_price": 679.90, "supplier_price": 200.00, "supplier": "CJ Dropshipping"},
+    {"name": "Nike Vapormax Flyknit", "cat": "nike", "brand": "Nike", "base_price": 899.90, "supplier_price": 280.00, "supplier": "CJ Dropshipping"},
+    {"name": "Meias Nike Everyday 3 Pares", "cat": "nike", "brand": "Nike", "base_price": 59.90, "supplier_price": 12.00, "supplier": "CJ Dropshipping"},
+
+    # ═══ AI & ANTHROPIC (8 products) - Digital, supplier: self ═══
+    {"name": "Curso IA com Claude API", "cat": "ai", "brand": "Anthropic", "base_price": 297.00, "supplier_price": 50.00, "supplier": "Digital"},
+    {"name": "Pack Prompts Anthropic Pro", "cat": "ai", "brand": "Anthropic", "base_price": 147.00, "supplier_price": 20.00, "supplier": "Digital"},
+    {"name": "Template Chatbot Claude", "cat": "ai", "brand": "Anthropic", "base_price": 97.00, "supplier_price": 15.00, "supplier": "Digital"},
+    {"name": "Ebook: IA para Negócios", "cat": "ai", "brand": "Anthropic", "base_price": 49.90, "supplier_price": 5.00, "supplier": "Digital"},
+    {"name": "API Credits Claude Haiku", "cat": "ai", "brand": "Anthropic", "base_price": 197.00, "supplier_price": 80.00, "supplier": "Digital"},
+    {"name": "Automação MCP Server Kit", "cat": "ai", "brand": "Anthropic", "base_price": 397.00, "supplier_price": 60.00, "supplier": "Digital"},
+    {"name": "Curso Machine Learning Python", "cat": "ai", "brand": "Anthropic", "base_price": 247.00, "supplier_price": 40.00, "supplier": "Digital"},
+    {"name": "Pack 500 Prompts ChatGPT+Claude", "cat": "ai", "brand": "Anthropic", "base_price": 67.00, "supplier_price": 8.00, "supplier": "Digital"},
+
+    # ═══ TECH (12 products) - Supplier: AliExpress / Shein ═══
+    {"name": "Fone Bluetooth Pro Max", "cat": "tech", "brand": "", "base_price": 29.90, "supplier_price": 8.50, "supplier": "AliExpress"},
+    {"name": "Ring Light LED 26cm", "cat": "tech", "brand": "", "base_price": 49.90, "supplier_price": 15.00, "supplier": "AliExpress"},
+    {"name": "Smartwatch Fitness Y68", "cat": "tech", "brand": "", "base_price": 79.90, "supplier_price": 22.00, "supplier": "AliExpress"},
+    {"name": "Hub USB-C 7 em 1", "cat": "tech", "brand": "", "base_price": 89.90, "supplier_price": 25.00, "supplier": "AliExpress"},
+    {"name": "Mini Projetor LED", "cat": "tech", "brand": "", "base_price": 199.90, "supplier_price": 65.00, "supplier": "AliExpress"},
+    {"name": "Teclado Mecânico RGB", "cat": "tech", "brand": "", "base_price": 159.90, "supplier_price": 45.00, "supplier": "AliExpress"},
+    {"name": "Mouse Gamer 12000 DPI", "cat": "tech", "brand": "", "base_price": 69.90, "supplier_price": 18.00, "supplier": "AliExpress"},
+    {"name": "Webcam Full HD 1080p", "cat": "tech", "brand": "", "base_price": 119.90, "supplier_price": 35.00, "supplier": "AliExpress"},
+    {"name": "Carregador Wireless 15W", "cat": "tech", "brand": "", "base_price": 44.90, "supplier_price": 12.00, "supplier": "AliExpress"},
+    {"name": "Cabo USB-C Magnético 2m", "cat": "tech", "brand": "", "base_price": 24.90, "supplier_price": 5.50, "supplier": "AliExpress"},
+    {"name": "Mini Drone com Câmera", "cat": "tech", "brand": "", "base_price": 249.90, "supplier_price": 78.00, "supplier": "AliExpress"},
+    {"name": "Caixa de Som Bluetooth IP67", "cat": "tech", "brand": "", "base_price": 89.90, "supplier_price": 28.00, "supplier": "AliExpress"},
+
+    # ═══ BEAUTY (8 products) - Supplier: Shein / AliExpress ═══
+    {"name": "Sérum Vitamina C 30ml", "cat": "beauty", "brand": "", "base_price": 39.90, "supplier_price": 9.00, "supplier": "Shein"},
+    {"name": "Massageador Facial Jade", "cat": "beauty", "brand": "", "base_price": 34.90, "supplier_price": 7.50, "supplier": "Shein"},
+    {"name": "Kit Pincéis Maquiagem 12pcs", "cat": "beauty", "brand": "", "base_price": 44.90, "supplier_price": 11.00, "supplier": "Shein"},
+    {"name": "Ácido Hialurônico Sérum", "cat": "beauty", "brand": "", "base_price": 49.90, "supplier_price": 10.00, "supplier": "Shein"},
+    {"name": "Dermaroller Microagulhas", "cat": "beauty", "brand": "", "base_price": 29.90, "supplier_price": 6.00, "supplier": "AliExpress"},
+    {"name": "Máscara LED Facial 7 Cores", "cat": "beauty", "brand": "", "base_price": 149.90, "supplier_price": 42.00, "supplier": "AliExpress"},
+    {"name": "Kit Skincare Coreano 5 Steps", "cat": "beauty", "brand": "", "base_price": 89.90, "supplier_price": 25.00, "supplier": "AliExpress"},
+    {"name": "Escova Facial Elétrica", "cat": "beauty", "brand": "", "base_price": 59.90, "supplier_price": 16.00, "supplier": "AliExpress"},
+
+    # ═══ HOME (7 products) - Supplier: AliExpress / Shopee ═══
+    {"name": "Luminária LED Lua 3D", "cat": "home", "brand": "", "base_price": 69.90, "supplier_price": 20.00, "supplier": "AliExpress"},
+    {"name": "Umidificador Ultrassônico", "cat": "home", "brand": "", "base_price": 59.90, "supplier_price": 17.00, "supplier": "AliExpress"},
+    {"name": "Câmera WiFi 360° Pet", "cat": "home", "brand": "", "base_price": 99.90, "supplier_price": 32.00, "supplier": "AliExpress"},
+    {"name": "Aspirador Robô Smart", "cat": "home", "brand": "", "base_price": 399.90, "supplier_price": 120.00, "supplier": "AliExpress"},
+    {"name": "Difusor Aromaterapia LED", "cat": "home", "brand": "", "base_price": 49.90, "supplier_price": 14.00, "supplier": "AliExpress"},
+    {"name": "Cortina LED Cascata 3m", "cat": "home", "brand": "", "base_price": 39.90, "supplier_price": 10.00, "supplier": "AliExpress"},
+    {"name": "Organizador Acrílico Makeup", "cat": "home", "brand": "", "base_price": 44.90, "supplier_price": 12.00, "supplier": "Shopee"},
+
+    # ═══ FASHION (8 products) - Supplier: Shein / CJ Dropshipping ═══
+    {"name": "Bolsa Crossbody Minimalista", "cat": "fashion", "brand": "", "base_price": 54.90, "supplier_price": 15.00, "supplier": "Shein"},
+    {"name": "Óculos de Sol Polarizado", "cat": "fashion", "brand": "", "base_price": 39.90, "supplier_price": 8.00, "supplier": "AliExpress"},
+    {"name": "Relógio Analógico Vintage", "cat": "fashion", "brand": "", "base_price": 69.90, "supplier_price": 19.00, "supplier": "AliExpress"},
+    {"name": "Cinto Couro Ecológico", "cat": "fashion", "brand": "", "base_price": 34.90, "supplier_price": 8.00, "supplier": "Shein"},
+    {"name": "Carteira Slim RFID Block", "cat": "fashion", "brand": "", "base_price": 44.90, "supplier_price": 11.00, "supplier": "AliExpress"},
+    {"name": "Chapéu Bucket Hat Unissex", "cat": "fashion", "brand": "", "base_price": 29.90, "supplier_price": 6.50, "supplier": "Shein"},
+    {"name": "Meia Invisível Kit 10 Pares", "cat": "fashion", "brand": "", "base_price": 24.90, "supplier_price": 5.00, "supplier": "AliExpress"},
+    {"name": "Pulseira Aço Inox Magnética", "cat": "fashion", "brand": "", "base_price": 39.90, "supplier_price": 9.00, "supplier": "AliExpress"},
+
+    # ═══ FITNESS (8 products) - Supplier: CJ Dropshipping ═══
+    {"name": "Corda de Pular Speed Rope", "cat": "fitness", "brand": "", "base_price": 29.90, "supplier_price": 6.00, "supplier": "CJ Dropshipping"},
+    {"name": "Faixa Elástica Kit 5 Níveis", "cat": "fitness", "brand": "", "base_price": 39.90, "supplier_price": 10.00, "supplier": "CJ Dropshipping"},
+    {"name": "Garrafa Motivacional 2L", "cat": "fitness", "brand": "", "base_price": 34.90, "supplier_price": 8.00, "supplier": "CJ Dropshipping"},
+    {"name": "Rolo Massagem Miofascial", "cat": "fitness", "brand": "", "base_price": 49.90, "supplier_price": 13.00, "supplier": "CJ Dropshipping"},
+    {"name": "Luva Treino Academia", "cat": "fitness", "brand": "", "base_price": 34.90, "supplier_price": 8.00, "supplier": "AliExpress"},
+    {"name": "Whey Protein Isolate 900g", "cat": "fitness", "brand": "", "base_price": 129.90, "supplier_price": 45.00, "supplier": "Fornecedor Nacional"},
+    {"name": "Creatina Monohidratada 300g", "cat": "fitness", "brand": "", "base_price": 79.90, "supplier_price": 28.00, "supplier": "Fornecedor Nacional"},
+    {"name": "Coqueteleira 600ml Inox", "cat": "fitness", "brand": "", "base_price": 29.90, "supplier_price": 7.00, "supplier": "AliExpress"},
+
+    # ═══ PETS (6 products) - Supplier: AliExpress ═══
+    {"name": "Bebedouro Fonte Automática", "cat": "pets", "brand": "", "base_price": 79.90, "supplier_price": 24.00, "supplier": "AliExpress"},
+    {"name": "Brinquedo Interativo Gato", "cat": "pets", "brand": "", "base_price": 29.90, "supplier_price": 7.00, "supplier": "AliExpress"},
+    {"name": "Coleira GPS Rastreador", "cat": "pets", "brand": "", "base_price": 129.90, "supplier_price": 42.00, "supplier": "AliExpress"},
+    {"name": "Cama Pet Ortopédica M", "cat": "pets", "brand": "", "base_price": 99.90, "supplier_price": 30.00, "supplier": "AliExpress"},
+    {"name": "Comedouro Automático WiFi", "cat": "pets", "brand": "", "base_price": 179.90, "supplier_price": 55.00, "supplier": "AliExpress"},
+    {"name": "Escova Desembaraçadora Pro", "cat": "pets", "brand": "", "base_price": 24.90, "supplier_price": 5.00, "supplier": "AliExpress"},
+
+    # ═══ GAMING & GEEK (8 products) - Supplier: AliExpress ═══
+    {"name": "Controle Gamer Bluetooth", "cat": "gaming", "brand": "", "base_price": 89.90, "supplier_price": 28.00, "supplier": "AliExpress"},
+    {"name": "Headset Gamer 7.1 RGB", "cat": "gaming", "brand": "", "base_price": 129.90, "supplier_price": 38.00, "supplier": "AliExpress"},
+    {"name": "Mousepad XXL 80x30cm RGB", "cat": "gaming", "brand": "", "base_price": 59.90, "supplier_price": 16.00, "supplier": "AliExpress"},
+    {"name": "Suporte Headset RGB", "cat": "gaming", "brand": "", "base_price": 49.90, "supplier_price": 14.00, "supplier": "AliExpress"},
+    {"name": "Luminária Neon Gamer", "cat": "gaming", "brand": "", "base_price": 79.90, "supplier_price": 22.00, "supplier": "AliExpress"},
+    {"name": "Cadeira Gamer Ergonômica", "cat": "gaming", "brand": "", "base_price": 599.90, "supplier_price": 180.00, "supplier": "CJ Dropshipping"},
+    {"name": "Ring Light Streamer 10\"", "cat": "gaming", "brand": "", "base_price": 69.90, "supplier_price": 20.00, "supplier": "AliExpress"},
+    {"name": "Webcam 4K Streamer Pro", "cat": "gaming", "brand": "", "base_price": 199.90, "supplier_price": 62.00, "supplier": "AliExpress"},
+
+    # ═══ FOOD & SUPPLEMENTS (5 products) - Supplier: Fornecedor Nacional ═══
+    {"name": "Colágeno Hidrolisado 500g", "cat": "food", "brand": "", "base_price": 59.90, "supplier_price": 18.00, "supplier": "Fornecedor Nacional"},
+    {"name": "Pasta Amendoim Gourmet 1kg", "cat": "food", "brand": "", "base_price": 34.90, "supplier_price": 12.00, "supplier": "Fornecedor Nacional"},
+    {"name": "Multivitamínico A-Z 90caps", "cat": "food", "brand": "", "base_price": 44.90, "supplier_price": 15.00, "supplier": "Fornecedor Nacional"},
+    {"name": "Ômega 3 EPA/DHA 120caps", "cat": "food", "brand": "", "base_price": 49.90, "supplier_price": 16.00, "supplier": "Fornecedor Nacional"},
+    {"name": "Melatonina 5mg 60caps", "cat": "food", "brand": "", "base_price": 39.90, "supplier_price": 10.00, "supplier": "Fornecedor Nacional"},
 ]
 
 async def gen_description(product: dict) -> str:
@@ -218,6 +275,8 @@ async def gen_description(product: dict) -> str:
             "fashion": "Estilo e elegância para todas as ocasiões!",
             "fitness": "Supere seus limites com o equipamento certo!",
             "pets": "Seu pet merece o melhor! Conforto e diversão garantidos.",
+            "gaming": "Level up no seu setup! Performance e estilo gamer.",
+            "food": "Nutrição de qualidade para uma vida mais saudável!",
         }
         desc = fallbacks.get(product["cat"], "Produto incrível com qualidade garantida!")
     return desc
@@ -260,54 +319,65 @@ from app.multi_agent import (
     get_agent_status, bus, kb
 )
 
+# ─── WhatsApp Bot ───
+from app.whatsapp_bot import (
+    init_whatsapp_bot, wa_bot, WA_VERIFY_TOKEN, WA_STATS, CONVERSATIONS
+)
+
+# ─── Social Media (Iris AI) ───
+from app.social_media import (
+    auto_post, social_media_loop, get_social_stats, SOCIAL_POSTS, SOCIAL_STATS
+)
+
+# ─── Email Marketing ───
+from app.email_marketing import (
+    send_welcome_email, send_order_email, send_cart_reminder,
+    send_weekly_deals, add_abandoned_cart, process_abandoned_carts,
+    get_email_stats, SUBSCRIBERS, EMAIL_LOG
+)
+
+
 async def initialize_catalog():
-    """Build catalog with AI descriptions, save to SQLite"""
     await init_db()
     await init_auth_db()
     
     existing = await product_count()
     if existing > 0:
         log_ai("Luna", "STARTUP", f"Catálogo já existe com {existing} produtos no SQL")
-        # Load into memory
         prods = await get_all_products()
         PRODUCTS.clear()
         PRODUCTS.extend(prods)
         stats = await get_all_stats()
         STORE_STATS.update({k: v for k, v in stats.items() if k in STORE_STATS})
         asyncio.create_task(ai_background_loop())
-        # Start multi-agent system
+        asyncio.create_task(social_media_loop(PRODUCTS, log_ai))
         init_multi_agent(PRODUCTS, ORDERS, STORE_STATS, AI_ACTIVITY_LOG,
                          ask_ai, log_ai, log_activity, inc_stat, update_product,
                          {"stock_low": notify_stock_low, "new_order": notify_new_order})
         await start_all_agents()
-        log_ai("Sistema", "MULTI-AGENT", "🤖 6 IAs + decisões colaborativas ativas!")
+        init_whatsapp_bot(PRODUCTS, ORDERS, ask_ai, log_ai)
+        log_ai("Sistema", "MULTI-AGENT", "🤖 6 IAs + WhatsApp Bot + Social Media ativas!")
         return
     
-    log_ai("Luna", "STARTUP", "Iniciando curadoria do catálogo - Nike + Anthropic + 37 produtos")
+    log_ai("Luna", "STARTUP", f"Criando catálogo com {len(INITIAL_PRODUCTS)} produtos de fornecedores reais")
     await log_activity("Luna", "STARTUP", "Iniciando curadoria com Claude AI + Ollama")
     
     for p in INITIAL_PRODUCTS:
         pricing = calc_price(p)
         desc = await gen_description(p)
-        
         pid = hashlib.md5(p["name"].encode()).hexdigest()[:8]
         sold = random.randint(50, 2000)
         rating = round(random.uniform(4.0, 5.0), 1)
         
         product = {
-            "id": pid,
-            "name": p["name"],
-            "category": p["cat"],
-            "brand": p.get("brand", ""),
-            "description": desc,
-            "price": pricing["price"],
-            "old_price": pricing["old_price"],
-            "discount": pricing["discount"],
-            "margin": pricing["margin"],
+            "id": pid, "name": p["name"], "category": p["cat"],
+            "brand": p.get("brand", ""), "description": desc,
+            "price": pricing["price"], "old_price": pricing["old_price"],
+            "discount": pricing["discount"], "margin": pricing["margin"],
             "supplier_price": p["supplier_price"],
+            "supplier": p.get("supplier", "AliExpress"),
             "image": make_image_url(p["name"], p["cat"]),
-            "sold": sold,
-            "rating": rating,
+            "sold": sold, "rating": rating,
             "reviews_count": random.randint(10, sold // 2),
             "stock": random.randint(5, 100),
             "shipping_days": random.randint(3, 15),
@@ -321,19 +391,21 @@ async def initialize_catalog():
         STORE_STATS["products_curated"] += 1
     
     n = len(PRODUCTS)
-    log_ai("Luna", "CATALOG", f"Catálogo criado: {n} produtos (Nike + Anthropic + Tech)")
-    log_ai("Aria", "COPY", f"Descrições escritas para {n} produtos via {'Claude' if ANTHROPIC_KEY else 'Ollama'}")
+    log_ai("Luna", "CATALOG", f"Catálogo criado: {n} produtos (Nike + Anthropic + 10 categorias)")
+    log_ai("Aria", "COPY", f"Descrições para {n} produtos via {'Claude' if ANTHROPIC_KEY else 'Ollama'}")
     log_ai("Zara", "PRICING", f"Preços otimizados para {n} produtos")
-    await log_activity("Luna", "CATALOG", f"{n} produtos inseridos no SQLite")
-    await log_activity("Aria", "COPY", f"Descrições via {'Anthropic Claude' if ANTHROPIC_KEY else 'Ollama'}")
-
+    log_ai("Iris", "SOCIAL", f"📱 Auto-posting ativado para Instagram/TikTok/Twitter")
+    log_ai("Nova", "WHATSAPP", f"📱 WhatsApp Bot 24/7 ativo")
+    
     asyncio.create_task(ai_background_loop())
-    # Start multi-agent system
+    asyncio.create_task(social_media_loop(PRODUCTS, log_ai))
+    
     init_multi_agent(PRODUCTS, ORDERS, STORE_STATS, AI_ACTIVITY_LOG,
                      ask_ai, log_ai, log_activity, inc_stat, update_product,
                      {"stock_low": notify_stock_low, "new_order": notify_new_order})
     await start_all_agents()
-    log_ai("Sistema", "MULTI-AGENT", "🤖 6 IAs + decisões colaborativas ativas!")
+    init_whatsapp_bot(PRODUCTS, ORDERS, ask_ai, log_ai)
+    log_ai("Sistema", "MULTI-AGENT", "🤖 6 IAs + WhatsApp + Social Media + Email Marketing!")
 
 async def ai_background_loop():
     while True:
@@ -354,6 +426,9 @@ async def ai_background_loop():
             STORE_STATS["visitors"] += random.randint(5, 50)
             await inc_stat("visitors", random.randint(5, 50))
             
+            # Process abandoned carts
+            await process_abandoned_carts()
+            
             if random.random() < 0.3 and PRODUCTS:
                 prod = random.choice(PRODUCTS)
                 qty = random.randint(1, 3)
@@ -365,6 +440,7 @@ async def ai_background_loop():
                     "status": random.choice(["Processando", "Enviado", "Em trânsito"]),
                     "customer": f"Cliente #{random.randint(1000, 9999)}",
                     "handled_by": "Vega",
+                    "supplier": prod.get("supplier", "AliExpress"),
                 }
                 await insert_order(order)
                 ORDERS.append(order)
@@ -376,7 +452,6 @@ async def ai_background_loop():
                 prod["stock"] = max(0, prod["stock"] - qty)
                 await update_product(prod["id"], sold=prod["sold"], stock=prod["stock"])
                 log_ai("Vega", "ORDER_SQL", f"Pedido {oid}: {qty}x {prod['name']} = R${order['total']:.2f}")
-                # Telegram notification
                 await notify_new_order(order, prod)
                 if prod["stock"] < 5:
                     await notify_stock_low(prod["name"], prod["stock"])
@@ -414,7 +489,7 @@ async def home(request: Request, cat: Optional[str] = None, q: Optional[str] = N
         "request": request, "products": products, "categories": CATEGORIES,
         "current_cat": cat, "search_query": q or "", "current_sort": sort or "",
         "stats": STORE_STATS, "ai_employees": AI_EMPLOYEES,
-        "has_anthropic": bool(ANTHROPIC_KEY),
+        "has_anthropic": bool(ANTHROPIC_KEY), "ga_id": GA_MEASUREMENT_ID,
     })
 
 @app.get("/product/{product_id}", response_class=HTMLResponse)
@@ -425,7 +500,7 @@ async def product_detail(request: Request, product_id: str):
     related = [p for p in PRODUCTS if p["category"] == product["category"] and p["id"] != product_id][:4]
     return templates.TemplateResponse("product.html", {
         "request": request, "product": product, "related": related,
-        "ai_employees": AI_EMPLOYEES, "stats": STORE_STATS,
+        "ai_employees": AI_EMPLOYEES, "stats": STORE_STATS, "ga_id": GA_MEASUREMENT_ID,
     })
 
 @app.post("/api/buy/{product_id}")
@@ -457,15 +532,11 @@ async def buy_product(request: Request, product_id: str, qty: int = 1):
     
     log_ai("Vega", "ORDER", f"Pedido {oid}: {qty}x {product['name']}")
     log_ai("Nova", "SUPPORT", f"Confirmação enviada ao {order['customer']}")
-    await log_activity("Vega", "ORDER", f"Pedido {oid} salvo no SQLite")
-
-    # Telegram notification
     await notify_new_order(order, product)
     if product["stock"] < 5:
         await notify_stock_low(product["name"], product["stock"])
 
-    # Save to customer account if logged in
-    token = request.cookies.get("token") if hasattr(request, 'cookies') else None
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
     if token:
         user = decode_token(token)
         if user:
@@ -501,15 +572,50 @@ async def dashboard(request: Request):
     top_products = sorted(PRODUCTS, key=lambda x: x["sold"], reverse=True)[:10]
     recent_orders = (await get_orders(20)) if await count_orders() > 0 else ORDERS[-20:][::-1]
     recent_activity = AI_ACTIVITY_LOG[-30:][::-1]
-    db_activity = await get_activity(30)
     
     total_profit = sum(o.get("profit", 0) for o in ORDERS)
     avg_margin = sum(p["margin"] for p in PRODUCTS) / len(PRODUCTS) if PRODUCTS else 0
     
+    # Supplier breakdown
+    suppliers = {}
+    for p in PRODUCTS:
+        s = p.get("supplier", "Desconhecido")
+        if s not in suppliers:
+            suppliers[s] = {"count": 0, "revenue": 0}
+        suppliers[s]["count"] += 1
+        suppliers[s]["revenue"] += p["price"] * p.get("sold", 0)
+    
+    # Category breakdown
+    cat_stats = {}
+    for p in PRODUCTS:
+        c = p.get("category", "other")
+        if c not in cat_stats:
+            cat_stats[c] = {"count": 0, "sold": 0, "revenue": 0}
+        cat_stats[c]["count"] += 1
+        cat_stats[c]["sold"] += p.get("sold", 0)
+        cat_stats[c]["revenue"] += p["price"] * p.get("sold", 0)
+    
+    # Revenue timeline (simulated daily data)
+    revenue_timeline = []
+    for i in range(30):
+        day = (datetime.now() - timedelta(days=29-i)).strftime("%d/%m")
+        rev = random.uniform(500, 5000) * (1 + i * 0.02)
+        revenue_timeline.append({"day": day, "revenue": round(rev, 2)})
+    
+    # Conversion funnel
+    visitors = STORE_STATS.get("visitors", 1000)
+    funnel = {
+        "visitors": visitors,
+        "product_views": int(visitors * random.uniform(0.3, 0.5)),
+        "add_to_cart": int(visitors * random.uniform(0.1, 0.2)),
+        "checkout": int(visitors * random.uniform(0.05, 0.1)),
+        "purchase": STORE_STATS.get("orders_count", 0),
+    }
+    
     return templates.TemplateResponse("dashboard.html", {
         "request": request, "stats": STORE_STATS,
         "top_products": top_products, "recent_orders": recent_orders,
-        "recent_activity": recent_activity, "db_activity": db_activity,
+        "recent_activity": recent_activity,
         "ai_employees": AI_EMPLOYEES,
         "total_profit": round(total_profit, 2),
         "avg_margin": round(avg_margin, 1),
@@ -519,6 +625,14 @@ async def dashboard(request: Request):
         "has_pg": has_pg(),
         "db_info": await db_status(),
         "db_size": f"{Path(BASE.parent / 'store.db').stat().st_size / 1024:.1f} KB" if Path(BASE.parent / 'store.db').exists() else "0 KB",
+        "suppliers": suppliers,
+        "cat_stats": cat_stats,
+        "revenue_timeline": json.dumps(revenue_timeline),
+        "funnel": funnel,
+        "social_stats": SOCIAL_STATS,
+        "wa_stats": WA_STATS,
+        "email_stats": get_email_stats(),
+        "ga_id": GA_MEASUREMENT_ID,
     })
 
 @app.get("/api/stats")
@@ -531,6 +645,8 @@ async def get_stats_api():
         "recent_activity": AI_ACTIVITY_LOG[-10:][::-1],
         "engine": "Anthropic Claude" if ANTHROPIC_KEY else "Ollama Local",
         "database": dbs,
+        "social": SOCIAL_STATS,
+        "whatsapp": WA_STATS,
     })
 
 @app.get("/api/ai-activity")
@@ -559,10 +675,7 @@ async def api_agents():
 
 @app.get("/api/agents/messages")
 async def api_agent_messages(agent: Optional[str] = None, limit: int = 50):
-    if agent:
-        msgs = bus.get_for(agent, limit)
-    else:
-        msgs = bus.get_all(limit)
+    msgs = bus.get_for(agent, limit) if agent else bus.get_all(limit)
     return JSONResponse({"messages": msgs})
 
 @app.get("/api/agents/decisions")
@@ -577,7 +690,7 @@ async def api_agent_knowledge():
         "performance": kb.performance,
     })
 
-# ─── AUTH ROUTES (Customer Accounts) ───
+# ─── AUTH ROUTES ───
 
 @app.post("/api/register")
 async def api_register(request: Request):
@@ -585,7 +698,9 @@ async def api_register(request: Request):
     result = await register_customer(data.get("name", ""), data.get("email", ""), data.get("password", ""))
     if result.get("success"):
         await notify_new_customer(data["name"], data["email"])
+        await send_welcome_email(data["name"], data["email"])
         log_ai("Nova", "REGISTER", f"Novo cliente: {data['email']}")
+        log_ai("Aria", "EMAIL", f"📧 Welcome email enviado para {data['email']}")
     return JSONResponse(result)
 
 @app.post("/api/login")
@@ -607,8 +722,111 @@ async def api_me(request: Request):
 @app.get("/conta", response_class=HTMLResponse)
 async def account_page(request: Request):
     return templates.TemplateResponse("account.html", {
-        "request": request, "ai_employees": AI_EMPLOYEES,
+        "request": request, "ai_employees": AI_EMPLOYEES, "ga_id": GA_MEASUREMENT_ID,
     })
+
+# ─── WHATSAPP BOT ROUTES ───
+
+@app.get("/api/whatsapp/webhook")
+async def wa_verify(request: Request):
+    """WhatsApp webhook verification"""
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+    
+    if mode == "subscribe" and token == WA_VERIFY_TOKEN:
+        return HTMLResponse(content=challenge, status_code=200)
+    return JSONResponse({"error": "Forbidden"}, 403)
+
+@app.post("/api/whatsapp/webhook")
+async def wa_webhook(request: Request):
+    """Receive WhatsApp messages"""
+    try:
+        body = await request.json()
+        entry = body.get("entry", [{}])[0]
+        changes = entry.get("changes", [{}])[0]
+        value = changes.get("value", {})
+        messages = value.get("messages", [])
+        
+        for msg in messages:
+            phone = msg.get("from", "")
+            text = msg.get("text", {}).get("body", "")
+            name = ""
+            contacts = value.get("contacts", [])
+            if contacts:
+                name = contacts[0].get("profile", {}).get("name", "")
+            
+            if text and phone:
+                asyncio.create_task(wa_bot.handle_message(phone, text, name))
+        
+        return JSONResponse({"status": "ok"})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, 500)
+
+@app.get("/api/whatsapp/stats")
+async def wa_stats_api():
+    return JSONResponse({
+        "stats": WA_STATS,
+        "active_conversations": len(CONVERSATIONS),
+        "conversations": {phone[-4:]: len(msgs) for phone, msgs in list(CONVERSATIONS.items())[-20:]},
+    })
+
+@app.post("/api/whatsapp/send")
+async def wa_send(request: Request):
+    """Manual send for testing"""
+    data = await request.json()
+    phone = data.get("phone", "")
+    message = data.get("message", "")
+    if phone and message:
+        response = await wa_bot.handle_message(phone, message, "Teste")
+        return JSONResponse({"success": True, "response": response})
+    return JSONResponse({"error": "phone and message required"}, 400)
+
+# ─── SOCIAL MEDIA ROUTES (Iris AI) ───
+
+@app.get("/api/social/stats")
+async def social_stats_api():
+    return JSONResponse(get_social_stats())
+
+@app.post("/api/social/post")
+async def social_post_now(request: Request):
+    """Manual post to social media"""
+    data = await request.json()
+    product_id = data.get("product_id", "")
+    platform = data.get("platform", "instagram")
+    product = next((p for p in PRODUCTS if p["id"] == product_id), None)
+    if product:
+        post = await auto_post(product, platform)
+        log_ai("Iris", "SOCIAL_MANUAL", f"📱 {platform}: {product['name']}")
+        return JSONResponse({"success": True, "post": post})
+    return JSONResponse({"error": "Produto não encontrado"}, 404)
+
+@app.get("/api/social/feed")
+async def social_feed():
+    return JSONResponse({"posts": SOCIAL_POSTS[-30:][::-1], "stats": SOCIAL_STATS})
+
+# ─── EMAIL MARKETING ROUTES ───
+
+@app.get("/api/email/stats")
+async def email_stats_api():
+    return JSONResponse(get_email_stats())
+
+@app.post("/api/email/subscribe")
+async def email_subscribe(request: Request):
+    data = await request.json()
+    email = data.get("email", "")
+    name = data.get("name", "Visitante")
+    if email:
+        await send_welcome_email(name, email)
+        log_ai("Aria", "EMAIL", f"📧 Novo subscriber: {email}")
+        return JSONResponse({"success": True, "message": "Inscrito! Check seu email."})
+    return JSONResponse({"error": "Email necessário"}, 400)
+
+@app.post("/api/email/weekly-deals")
+async def email_weekly_deals():
+    sent = await send_weekly_deals(PRODUCTS)
+    log_ai("Aria", "EMAIL", f"📧 Newsletter semanal enviada para {sent} subscribers")
+    return JSONResponse({"success": True, "sent": sent})
 
 # ─── TELEGRAM ROUTES ───
 
@@ -618,13 +836,13 @@ async def telegram_register(request: Request):
     chat_id = data.get("chat_id", "")
     if chat_id:
         register_chat(chat_id)
-        await send_telegram(f"✅ Chat {chat_id} registrado para notificações da AI Drop Store!", chat_id)
-        return JSONResponse({"success": True, "message": f"Chat {chat_id} registrado"})
+        await send_telegram(f"✅ Chat {chat_id} registrado para notificações!", chat_id)
+        return JSONResponse({"success": True})
     return JSONResponse({"error": "chat_id necessário"}, 400)
 
 @app.post("/api/telegram/test")
 async def telegram_test():
-    ok = await send_telegram("🧪 <b>Teste de notificação</b>\n\nAI Drop Store está conectada ao Telegram!")
+    ok = await send_telegram("🧪 <b>Teste</b>\n\nAI Drop Store conectada!")
     return JSONResponse({"success": ok})
 
 @app.get("/api/telegram/summary")
@@ -637,9 +855,10 @@ async def telegram_summary():
 
 @app.get("/sitemap.xml")
 async def sitemap():
-    base = "https://ai-drop-store.onrender.com"
+    base = "https://ai-drop-store-nd4f.onrender.com"
     urls = [f"<url><loc>{base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>"]
     urls.append(f"<url><loc>{base}/dashboard</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>")
+    urls.append(f"<url><loc>{base}/agents</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>")
     for cat in CATEGORIES:
         urls.append(f"<url><loc>{base}/?cat={cat['id']}</loc><changefreq>daily</changefreq><priority>0.9</priority></url>")
     for p in PRODUCTS:
@@ -654,7 +873,7 @@ async def sitemap():
 async def robots():
     return HTMLResponse(content="""User-agent: *
 Allow: /
-Sitemap: https://ai-drop-store.onrender.com/sitemap.xml
+Sitemap: https://ai-drop-store-nd4f.onrender.com/sitemap.xml
 
 User-agent: Googlebot
 Allow: /

@@ -1,0 +1,41 @@
+{
+  "name": "AI Drop Store",
+  "short_name": "AI Drop",
+  "description": "Loja de dropshipping 100% operada por Inteligência Artificial - Nike + Anthropic + Tech",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#E30613",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "business"],
+  "lang": "pt-BR",
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Ofertas Nike",
+      "short_name": "Nike",
+      "url": "/?cat=nike",
+      "icons": [{"src": "/static/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Dashboard IA",
+      "short_name": "Dashboard",
+      "url": "/dashboard",
+      "icons": [{"src": "/static/icon-192.png", "sizes": "192x192"}]
+    }
+  ]
+}

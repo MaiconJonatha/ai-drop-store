@@ -4,120 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ product.name }} - AI Drop Store</title>
+    <meta name="description" content="{{ product.description[:160] }}">
+    <meta property="og:title" content="{{ product.name }} - AI Drop Store">
+    <meta property="og:description" content="{{ product.description[:160] }}">
+    <meta property="og:image" content="{{ product.image }}">
+    <meta name="theme-color" content="#E30613">
+    <link rel="manifest" href="/static/manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date()); gtag('config', '{{ ga_id }}');
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg: #0f0f23; --surface: #1a1a2e; --card: #16213e;
-            --primary: #8B5CF6; --secondary: #EC4899; --accent: #06B6D4;
-            --text: #e2e8f0; --text-dim: #94a3b8; --success: #10B981;
-            --warning: #F59E0B; --danger: #EF4444;
-        }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
-        .navbar {
-            background: var(--surface); padding: 15px 30px;
-            display: flex; align-items: center; gap: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .navbar a { color: var(--text-dim); text-decoration: none; font-size: 14px; }
-        .navbar a:hover { color: var(--primary); }
-        .logo { font-size: 20px; font-weight: 800; }
-        .logo span { background: linear-gradient(135deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        :root { --black: #111; --white: #fff; --gray-100: #f5f5f5; --gray-200: #e5e5e5; --gray-400: #999; --gray-600: #666; --red: #E30613; --success: #10B981; --anthropic: #D4A574; }
+        body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--black); }
+        .navbar { background: var(--white); padding: 16px 40px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--gray-200); }
+        .logo { font-size: 22px; font-weight: 900; }
+        .logo .ai { color: var(--red); }
+        .navbar a { color: var(--black); text-decoration: none; font-size: 14px; font-weight: 600; }
+        .navbar a:hover { color: var(--red); }
         
-        .product-page { max-width: 1100px; margin: 30px auto; padding: 0 30px; }
+        .product-page { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
         .product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .product-image-box {
-            background: var(--card); border-radius: 20px; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .product-image-box img { width: 100%; height: 450px; object-fit: cover; }
+        .product-image-box { background: var(--gray-100); border-radius: 20px; overflow: hidden; }
+        .product-image-box img { width: 100%; height: 500px; object-fit: cover; }
         
         .product-details { display: flex; flex-direction: column; gap: 20px; }
-        .breadcrumb { font-size: 12px; color: var(--text-dim); }
-        .breadcrumb a { color: var(--accent); text-decoration: none; }
-        h1 { font-size: 28px; font-weight: 800; line-height: 1.2; }
+        .breadcrumb { font-size: 12px; color: var(--gray-400); }
+        .breadcrumb a { color: var(--red); text-decoration: none; }
+        h1 { font-size: 32px; font-weight: 900; line-height: 1.2; }
+        .brand-tag { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+        .brand-nike { background: var(--black); color: var(--white); }
+        .brand-anthropic { background: var(--anthropic); color: var(--black); }
         .rating-row { display: flex; align-items: center; gap: 10px; }
-        .stars { color: var(--warning); font-size: 18px; }
-        .rating-text { color: var(--text-dim); font-size: 14px; }
+        .stars { color: var(--red); font-size: 18px; }
+        .rating-text { color: var(--gray-400); font-size: 14px; }
         
-        .price-box {
-            background: var(--card); padding: 20px; border-radius: 16px;
-            border: 1px solid rgba(139,92,246,0.3);
-        }
+        .price-box { background: var(--gray-100); padding: 24px; border-radius: 16px; }
         .price-row { display: flex; align-items: baseline; gap: 12px; }
-        .big-price { font-size: 36px; font-weight: 800; color: var(--success); }
-        .old-price { font-size: 18px; color: var(--text-dim); text-decoration: line-through; }
-        .discount-tag {
-            background: var(--danger); color: white; padding: 4px 12px;
-            border-radius: 15px; font-size: 14px; font-weight: 700;
-        }
-        .savings { color: var(--success); font-size: 14px; margin-top: 8px; }
+        .big-price { font-size: 40px; font-weight: 900; }
+        .old-price { font-size: 18px; color: var(--gray-400); text-decoration: line-through; }
+        .discount-tag { background: var(--red); color: white; padding: 4px 12px; border-radius: 15px; font-size: 14px; font-weight: 700; }
+        .savings { color: var(--success); font-size: 14px; margin-top: 8px; font-weight: 600; }
+        .pix-price { font-size: 13px; color: var(--success); margin-top: 4px; }
         
-        .desc-box {
-            background: var(--card); padding: 20px; border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.05); line-height: 1.6;
-        }
-        .desc-box h3 { margin-bottom: 10px; color: var(--accent); font-size: 14px; }
-        .desc-box p { color: var(--text-dim); font-size: 14px; }
+        .desc-box { background: var(--gray-100); padding: 20px; border-radius: 16px; line-height: 1.6; }
+        .desc-box h3 { margin-bottom: 10px; color: var(--red); font-size: 14px; }
+        .desc-box p { color: var(--gray-600); font-size: 14px; }
         
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .info-item {
-            background: var(--card); padding: 14px; border-radius: 12px;
-            display: flex; align-items: center; gap: 10px; font-size: 14px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .info-item { background: var(--gray-100); padding: 14px; border-radius: 12px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
         .info-item span:first-child { font-size: 20px; }
         
         .buy-section { display: flex; gap: 12px; }
-        .qty-select {
-            background: var(--card); border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text); padding: 12px 16px; border-radius: 12px;
-            font-size: 16px; width: 80px;
-        }
+        .qty-select { background: var(--gray-100); border: 2px solid var(--gray-200); color: var(--black); padding: 14px; border-radius: 12px; font-size: 16px; width: 80px; font-family: inherit; }
         .buy-now {
-            flex: 1; background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white; border: none; padding: 16px; border-radius: 12px;
-            font-size: 18px; font-weight: 700; cursor: pointer; transition: 0.2s;
+            flex: 1; background: var(--black); color: white; border: none;
+            padding: 18px; border-radius: 30px; font-size: 18px; font-weight: 700;
+            cursor: pointer; transition: 0.2s; font-family: inherit;
         }
-        .buy-now:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(139,92,246,0.4); }
+        .buy-now:hover { background: var(--red); transform: scale(1.02); }
         
-        .ai-info {
-            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(236,72,153,0.1));
-            padding: 16px; border-radius: 12px;
-            border: 1px solid rgba(139,92,246,0.2); font-size: 13px;
-        }
-        .ai-info h4 { color: var(--primary); margin-bottom: 8px; }
-        .ai-info p { color: var(--text-dim); line-height: 1.5; }
+        .wa-buy { flex: 0 0 auto; background: #25D366; color: white; border: none; padding: 18px 24px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
         
-        /* Related */
+        .ai-info { background: var(--gray-100); padding: 16px; border-radius: 12px; font-size: 13px; border-left: 4px solid var(--red); }
+        .ai-info h4 { color: var(--red); margin-bottom: 8px; }
+        .ai-info p { color: var(--gray-600); line-height: 1.6; }
+        
+        .supplier-info { background: var(--gray-100); padding: 12px 16px; border-radius: 10px; font-size: 12px; color: var(--gray-600); display: flex; justify-content: space-between; }
+        
         .related { margin-top: 50px; }
-        .related h2 { font-size: 22px; margin-bottom: 20px; }
+        .related h2 { font-size: 24px; font-weight: 900; margin-bottom: 20px; }
         .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-        .related-card {
-            background: var(--card); border-radius: 12px; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s;
-        }
-        .related-card:hover { border-color: var(--primary); }
+        .related-card { background: var(--gray-100); border-radius: 12px; overflow: hidden; cursor: pointer; transition: 0.2s; }
+        .related-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
         .related-card img { width: 100%; height: 150px; object-fit: cover; }
         .related-card .info { padding: 12px; }
-        .related-card .name { font-size: 13px; font-weight: 600; }
-        .related-card .price { color: var(--success); font-weight: 700; margin-top: 6px; }
+        .related-card .name { font-size: 13px; font-weight: 700; }
+        .related-card .price { color: var(--red); font-weight: 900; margin-top: 6px; }
         
-        .toast {
-            position: fixed; top: 20px; right: 20px; background: var(--success);
-            color: white; padding: 15px 25px; border-radius: 12px;
-            font-size: 14px; z-index: 2000; display: none;
-        }
+        .toast { position: fixed; top: 20px; right: 20px; background: var(--black); color: white; padding: 16px 28px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 2000; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
-        @media (max-width: 768px) {
-            .product-layout { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 768px) { .product-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">🛒 <span>AI Drop Store</span></div>
+        <div class="logo"><span class="ai">AI</span> DROP STORE</div>
         <a href="/">← Voltar à Loja</a>
         <a href="/dashboard">📊 Dashboard</a>
+        <a href="/conta">👤 Conta</a>
     </nav>
     
     <div class="product-page">
@@ -133,11 +112,14 @@
                     {{ product.name }}
                 </div>
                 
+                {% if product.brand == 'Nike' %}<span class="brand-tag brand-nike">NIKE ✓ ORIGINAL</span>{% endif %}
+                {% if product.brand == 'Anthropic' %}<span class="brand-tag brand-anthropic">ANTHROPIC OFICIAL</span>{% endif %}
+                
                 <h1>{{ product.name }}</h1>
                 
                 <div class="rating-row">
                     <span class="stars">{% for i in range(5) %}{% if i < product.rating|int %}★{% else %}☆{% endif %}{% endfor %}</span>
-                    <span class="rating-text">{{ product.rating }} ({{ product.reviews_count }} avaliações) • {{ product.sold }} vendidos</span>
+                    <span class="rating-text">{{ product.rating }} ({{ product.reviews_count }} avaliações) · {{ product.sold }} vendidos</span>
                 </div>
                 
                 <div class="price-box">
@@ -146,7 +128,8 @@
                         <span class="old-price">R$ {{ "%.2f"|format(product.old_price) }}</span>
                         <span class="discount-tag">-{{ product.discount }}%</span>
                     </div>
-                    <div class="savings">💰 Você economiza R$ {{ "%.2f"|format(product.old_price - product.price) }}</div>
+                    <div class="savings">💰 Economia de R$ {{ "%.2f"|format(product.old_price - product.price) }}</div>
+                    <div class="pix-price">💚 No PIX: R$ {{ "%.2f"|format(product.price * 0.95) }} (5% extra)</div>
                 </div>
                 
                 <div class="desc-box">
@@ -168,16 +151,22 @@
                         <option value="3">3</option>
                         <option value="5">5</option>
                     </select>
-                    <button class="buy-now" onclick="buyNow()">🛒 Comprar Agora</button>
+                    <button class="buy-now" onclick="buyNow()">🛒 COMPRAR AGORA</button>
+                    <button class="wa-buy" onclick="window.open('https://wa.me/5511999999999?text=Quero+comprar+{{ product.name }}','_blank')">💬</button>
+                </div>
+                
+                <div class="supplier-info">
+                    <span>🏭 Fornecedor: {{ product.get('supplier', 'AliExpress') }}</span>
+                    <span>📊 Margem: {{ product.margin }}%</span>
                 </div>
                 
                 <div class="ai-info">
-                    <h4>🤖 Este produto foi gerido por IAs</h4>
+                    <h4>🤖 Produto gerido por 4 IAs</h4>
                     <p>
-                        👩‍💼 <strong>Luna</strong> selecionou este produto do catálogo<br>
-                        ✍️ <strong>Aria</strong> escreveu a descrição persuasiva<br>
-                        📊 <strong>Zara</strong> otimizou o preço (margem: {{ product.margin }}%)<br>
-                        🚚 <strong>Vega</strong> gerencia a logística de entrega
+                        👩‍💼 <strong>Luna</strong> selecionou do catálogo ·
+                        ✍️ <strong>Aria</strong> escreveu a descrição ·
+                        📊 <strong>Zara</strong> otimizou o preço (margem {{ product.margin }}%) ·
+                        🚚 <strong>Vega</strong> gerencia logística
                     </p>
                 </div>
             </div>
@@ -189,7 +178,7 @@
             <div class="related-grid">
                 {% for r in related %}
                 <div class="related-card" onclick="window.location='/product/{{ r.id }}'">
-                    <img src="{{ r.image }}" alt="{{ r.name }}">
+                    <img src="{{ r.image }}" alt="{{ r.name }}" loading="lazy">
                     <div class="info">
                         <div class="name">{{ r.name }}</div>
                         <div class="price">R$ {{ "%.2f"|format(r.price) }}</div>
@@ -211,6 +200,7 @@
                 const data = await r.json();
                 if (data.success) {
                     showToast('✅ ' + data.message);
+                    gtag('event', 'purchase', {transaction_id: data.order.id, value: data.order.total, currency: 'BRL', items: [{item_name: '{{ product.name }}', price: {{ product.price }}, quantity: parseInt(qty)}]});
                 } else {
                     showToast('❌ ' + (data.error || 'Erro'));
                 }
@@ -218,10 +208,10 @@
         }
         function showToast(msg) {
             const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.display = 'block';
+            t.textContent = msg; t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 4000);
         }
+        gtag('event', 'view_item', {currency: 'BRL', value: {{ product.price }}, items: [{item_name: '{{ product.name }}', price: {{ product.price }}}]});
     </script>
 </body>
 </html>
