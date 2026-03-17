@@ -156,7 +156,7 @@
                 </div>
                 
                 <div class="supplier-info">
-                    <span>🏭 Fornecedor: {{ product.get('supplier', 'AliExpress') }}</span>
+                    <span>🏭 Fornecedor: {{ product.supplier|default('AliExpress') }}</span>
                     <span>📊 Margem: {{ product.margin }}%</span>
                 </div>
                 

@@ -232,15 +232,15 @@
                 <h3>📱 Social Media <span class="badge">Iris AI</span></h3>
                 <div class="social-stat">
                     <span class="platform">📸 Instagram</span>
-                    <span class="count">{{ social_stats.get('instagram_posts', 0) }}</span>
+                    <span class="count">{{ social_stats.instagram_posts|default(0) }}</span>
                 </div>
                 <div class="social-stat">
                     <span class="platform">🎵 TikTok</span>
-                    <span class="count">{{ social_stats.get('tiktok_posts', 0) }}</span>
+                    <span class="count">{{ social_stats.tiktok_posts|default(0) }}</span>
                 </div>
                 <div class="social-stat">
                     <span class="platform">🐦 Twitter</span>
-                    <span class="count">{{ social_stats.get('twitter_posts', 0) }}</span>
+                    <span class="count">{{ social_stats.twitter_posts|default(0) }}</span>
                 </div>
                 <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-200)">
                     <div style="font-size:12px;color:var(--gray-600)">Engajamento Total</div>
@@ -289,13 +289,13 @@
                         <tr><th>Pedido</th><th>Produto</th><th>Total</th><th>Lucro</th><th>Status</th></tr>
                         {% for o in recent_orders[:12] %}
                         <tr>
-                            <td style="font-weight:600">{{ o.id }}</td>
-                            <td>{{ o.product[:22] }}</td>
-                            <td style="color:var(--success)">R$ {{ "%.2f"|format(o.total) }}</td>
-                            <td style="color:var(--warning)">R$ {{ "%.2f"|format(o.profit) }}</td>
+                            <td style="font-weight:600">{{ o.id|default('?') }}</td>
+                            <td>{{ (o.product_name|default(o.product|default('?')))[:22] }}</td>
+                            <td style="color:var(--success)">R$ {{ "%.2f"|format(o.total|default(0)|float) }}</td>
+                            <td style="color:var(--warning)">R$ {{ "%.2f"|format(o.profit|default(0)|float) }}</td>
                             <td>
-                                <span class="status-badge {% if o.status == 'Processando' %}status-processing{% elif o.status == 'Enviado' %}status-shipped{% else %}status-transit{% endif %}">
-                                    {{ o.status }}
+                                {% set status = o.status|default('?') %}<span class="status-badge {% if status == 'Processando' %}status-processing{% elif status == 'Enviado' %}status-shipped{% else %}status-transit{% endif %}">
+                                    {{ status }}
                                 </span>
                             </td>
                         </tr>
@@ -325,7 +325,7 @@
     </div>
     
     <script>
-        const revenueData = {{ revenue_timeline|safe }};
+        const revenueData = JSON.parse('{{ revenue_timeline|replace("'", "\\'")|safe }}');
         
         // Revenue Chart
         new Chart(document.getElementById('revenueChart'), {
@@ -353,7 +353,7 @@
         });
         
         // Category Chart
-        const catData = {{ cat_stats|tojson|safe }};
+        const catData = JSON.parse('{{ cat_stats_json|replace("'", "\\'")|safe }}');
         const catLabels = Object.keys(catData);
         const catValues = catLabels.map(k => catData[k].sold);
         const catColors = ['#111', '#2D1B69', '#1a1a2e', '#4A0E2E', '#1B3A2D', '#2E1A1A', '#1A2E3A', '#3A2E1A', '#1A1A3A', '#2E3A1A'];

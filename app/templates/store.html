@@ -363,7 +363,7 @@
             <div class="product-info">
                 {% if p.brand == 'Nike' %}<span class="brand-tag brand-nike">NIKE ✓</span>{% endif %}
                 {% if p.brand == 'Anthropic' %}<span class="brand-tag brand-anthropic">ANTHROPIC</span>{% endif %}
-                {% if p.get('supplier') %}<span class="supplier-tag">via {{ p.supplier }}</span>{% endif %}
+                {% if p.supplier %}<span class="supplier-tag">via {{ p.supplier }}</span>{% endif %}
                 <div class="product-name">{{ p.name }}</div>
                 <div class="product-desc">{{ p.description }}</div>
                 <div class="product-rating">

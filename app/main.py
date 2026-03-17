@@ -612,7 +612,8 @@ async def dashboard(request: Request):
         "purchase": STORE_STATS.get("orders_count", 0),
     }
     
-    return templates.TemplateResponse("dashboard.html", {
+    try:
+      return templates.TemplateResponse("dashboard.html", {
         "request": request, "stats": STORE_STATS,
         "top_products": top_products, "recent_orders": recent_orders,
         "recent_activity": recent_activity,
@@ -627,13 +628,18 @@ async def dashboard(request: Request):
         "db_size": f"{Path(BASE.parent / 'store.db').stat().st_size / 1024:.1f} KB" if Path(BASE.parent / 'store.db').exists() else "0 KB",
         "suppliers": suppliers,
         "cat_stats": cat_stats,
+        "cat_stats_json": json.dumps(cat_stats),
         "revenue_timeline": json.dumps(revenue_timeline),
         "funnel": funnel,
         "social_stats": SOCIAL_STATS,
         "wa_stats": WA_STATS,
         "email_stats": get_email_stats(),
         "ga_id": GA_MEASUREMENT_ID,
-    })
+      })
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        return HTMLResponse(f"<pre>Dashboard Error:\n{error_msg}</pre>", status_code=500)
 
 @app.get("/api/stats")
 async def get_stats_api():
