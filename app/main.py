@@ -34,7 +34,9 @@ app = FastAPI(title="AI Drop Store", version="2.0")
 PORT = int(os.environ.get("PORT", 8020))
 
 BASE = Path(__file__).parent
-app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
+static_dir = BASE / "static"
+static_dir.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 
 OLLAMA = os.environ.get("OLLAMA_URL", "http://localhost:11434")
