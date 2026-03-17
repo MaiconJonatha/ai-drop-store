@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Drop Store — Nike + Anthropic + IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --black: #111111; --white: #ffffff; --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5; --gray-400: #999; --gray-600: #666;
+            --red: #E30613; --nike-orange: #E30613; --anthropic: #D4A574;
+            --success: #10B981; --danger: #E30613; --accent: #E30613;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--white); color: var(--black); }
+        
+        /* Nike-style top bar */
+        .top-bar {
+            background: var(--black); color: var(--white); text-align: center;
+            padding: 10px 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+        }
+        .top-bar span { color: var(--red); }
+        
+        /* Navbar - clean Nike style */
+        .navbar {
+            background: var(--white); padding: 16px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; }
+        .logo .ai { color: var(--red); }
+        .search-box {
+            display: flex; background: var(--gray-100); border-radius: 30px;
+            overflow: hidden; border: 1px solid var(--gray-200);
+        }
+        .search-box input {
+            background: none; border: none; padding: 12px 24px; color: var(--black);
+            font-size: 14px; width: 320px; outline: none; font-family: inherit;
+        }
+        .search-box button {
+            background: var(--black); border: none; padding: 12px 20px;
+            color: white; cursor: pointer; font-size: 14px; border-radius: 0 30px 30px 0;
+        }
+        .nav-links { display: flex; gap: 24px; align-items: center; }
+        .nav-links a {
+            color: var(--black); text-decoration: none; font-size: 14px;
+            font-weight: 600; transition: 0.2s;
+        }
+        .nav-links a:hover { color: var(--red); }
+        
+        /* Hero Banner - Nike style */
+        .hero {
+            background: var(--black); color: var(--white); padding: 60px 40px;
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .hero h1 {
+            font-size: 56px; font-weight: 900; letter-spacing: -2px;
+            line-height: 1; margin-bottom: 12px; text-transform: uppercase;
+        }
+        .hero h1 .highlight { color: var(--red); }
+        .hero p { font-size: 16px; color: var(--gray-400); max-width: 500px; margin: 0 auto 20px; }
+        .hero-stats {
+            display: flex; justify-content: center; gap: 40px; margin-top: 24px;
+        }
+        .hero-stat .num { font-size: 32px; font-weight: 900; }
+        .hero-stat .label { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* AI Team Strip */
+        .ai-strip {
+            background: var(--gray-100); padding: 14px 40px;
+            display: flex; gap: 16px; overflow-x: auto; align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .ai-strip-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-600); white-space: nowrap; }
+        .ai-chip {
+            display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: 600;
+            background: var(--white); border: 1px solid var(--gray-200); white-space: nowrap;
+        }
+        .ai-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+        
+        /* Categories - Nike pill style */
+        .categories {
+            display: flex; gap: 10px; padding: 24px 40px; overflow-x: auto;
+            background: var(--white);
+        }
+        .cat-btn {
+            padding: 10px 24px; border-radius: 30px; border: 2px solid var(--gray-200);
+            background: var(--white); color: var(--black); cursor: pointer;
+            font-size: 14px; font-weight: 600; white-space: nowrap;
+            transition: 0.2s; text-decoration: none; font-family: inherit;
+        }
+        .cat-btn:hover { border-color: var(--black); }
+        .cat-btn.active { background: var(--black); color: var(--white); border-color: var(--black); }
+        
+        /* Sort bar */
+        .sort-bar {
+            padding: 10px 40px; display: flex; gap: 10px; align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .sort-bar span { color: var(--gray-600); font-size: 13px; font-weight: 600; }
+        .sort-btn {
+            padding: 6px 14px; border-radius: 20px; border: 1px solid var(--gray-200);
+            background: var(--white); color: var(--gray-600); cursor: pointer;
+            font-size: 12px; text-decoration: none; transition: 0.2s; font-family: inherit;
+        }
+        .sort-btn:hover, .sort-btn.active { background: var(--black); color: var(--white); border-color: var(--black); }
+        
+        /* Product Grid - Nike card style */
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px; padding: 30px 40px;
+        }
+        .product-card {
+            background: var(--white); border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--gray-200); transition: 0.3s;
+            cursor: pointer; position: relative;
+        }
+        .product-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.12); transform: translateY(-4px); }
+        .product-img {
+            width: 100%; height: 240px; object-fit: cover;
+            background: var(--gray-100);
+        }
+        .badge-row { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; }
+        .sold-tag {
+            background: rgba(0,0,0,0.8); color: white; padding: 4px 10px;
+            border-radius: 20px; font-size: 11px; font-weight: 600;
+        }
+        .discount-tag {
+            background: var(--danger); color: white; padding: 4px 10px;
+            border-radius: 20px; font-size: 12px; font-weight: 700;
+        }
+        .product-info { padding: 18px; }
+        .brand-tag {
+            display: inline-block; padding: 3px 10px; border-radius: 6px;
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 6px;
+        }
+        .brand-nike { background: var(--black); color: var(--white); }
+        .brand-anthropic { background: var(--anthropic); color: var(--black); }
+        .product-name { font-size: 16px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+        .product-desc {
+            font-size: 13px; color: var(--gray-600); margin-bottom: 12px; line-height: 1.4;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .product-rating { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 13px; }
+        .stars { color: var(--red); }
+        .price-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px; }
+        .price-now { font-size: 24px; font-weight: 900; }
+        .price-old { font-size: 14px; color: var(--gray-400); text-decoration: line-through; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; }
+        .shipping { font-size: 12px; color: var(--gray-600); }
+        .buy-btn {
+            background: var(--black); color: var(--white); border: none;
+            padding: 10px 24px; border-radius: 30px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: 0.2s; font-family: inherit;
+        }
+        .buy-btn:hover { background: var(--red); transform: scale(1.05); }
+        
+        /* Chat Widget */
+        .chat-widget { position: fixed; bottom: 24px; right: 24px; z-index: 1000; }
+        .chat-toggle {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--black); border: none; cursor: pointer; font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .chat-box {
+            display: none; position: absolute; bottom: 66px; right: 0;
+            width: 360px; height: 460px; background: var(--white);
+            border-radius: 16px; border: 1px solid var(--gray-200);
+            flex-direction: column; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .chat-box.open { display: flex; }
+        .chat-header {
+            background: var(--black); color: var(--white);
+            padding: 16px; display: flex; align-items: center; gap: 10px;
+        }
+        .chat-header h4 { font-size: 14px; font-weight: 700; }
+        .chat-header small { font-size: 11px; opacity: 0.7; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 14px; border-radius: 16px; font-size: 13px; max-width: 85%; line-height: 1.4; }
+        .msg.ai { background: var(--gray-100); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .msg.user { background: var(--black); color: var(--white); align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-input { display: flex; padding: 12px; gap: 8px; border-top: 1px solid var(--gray-200); }
+        .chat-input input {
+            flex: 1; background: var(--gray-100); border: 1px solid var(--gray-200);
+            border-radius: 24px; padding: 10px 18px; font-size: 13px; outline: none; font-family: inherit;
+        }
+        .chat-input button {
+            background: var(--black); border: none; border-radius: 50%;
+            width: 38px; height: 38px; color: white; cursor: pointer; font-size: 16px;
+        }
+        
+        /* No results */
+        .empty { text-align: center; padding: 80px 40px; color: var(--gray-600); }
+        .empty h2 { font-size: 24px; font-weight: 900; color: var(--black); margin: 16px 0 8px; }
+        
+        /* Footer - Nike style */
+        .footer {
+            background: var(--black); color: var(--white); padding: 50px 40px;
+            margin-top: 60px;
+        }
+        .footer h3 { font-size: 24px; font-weight: 900; margin-bottom: 12px; text-align: center; }
+        .footer p { color: var(--gray-400); font-size: 13px; line-height: 1.7; max-width: 600px; margin: 0 auto; text-align: center; }
+        .footer-team { display: flex; justify-content: center; gap: 24px; margin-top: 24px; flex-wrap: wrap; }
+        .footer-ai { text-align: center; }
+        .footer-ai .avatar { font-size: 28px; }
+        .footer-ai .name { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+        .footer-bottom { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .footer-bottom span { font-size: 11px; color: var(--gray-600); }
+        .tech-badges { display: flex; justify-content: center; gap: 12px; margin-top: 12px; }
+        .tech-badge {
+            padding: 4px 12px; border-radius: 12px; font-size: 10px; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.2); color: var(--gray-400);
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed; top: 20px; right: 20px; background: var(--black);
+            color: white; padding: 16px 28px; border-radius: 12px;
+            font-size: 14px; font-weight: 600; z-index: 2000; display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .products-grid { padding: 20px 16px; gap: 16px; }
+            .navbar { padding: 12px 16px; }
+            .search-box input { width: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        LOJA 100% OPERADA POR <span>INTELIGÊNCIA ARTIFICIAL</span> — NIKE + ANTHROPIC + 37 PRODUTOS — POSTGRESQL + SQLITE
+    </div>
+    
+    <nav class="navbar">
+        <div class="logo"><span class="ai">AI</span> DROP STORE</div>
+        <form class="search-box" action="/" method="get">
+            <input type="text" name="q" placeholder="Buscar Nike, Anthropic, Tech..." value="{{ search_query }}">
+            <button type="submit">🔍</button>
+        </form>
+        <div class="nav-links">
+            <a href="/">Loja</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/agents">🤖 Multi-Agentes</a>
+        </div>
+    </nav>
+    
+    <div class="ai-strip">
+        <span class="ai-strip-label">IAs Online:</span>
+        {% for key, ai in ai_employees.items() %}
+        <div class="ai-chip">
+            <span class="dot"></span>
+            {{ ai.avatar }} {{ ai.name }} — {{ ai.role }}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="hero">
+        <h1>JUST <span class="highlight">DROP</span> IT.</h1>
+        <p>A primeira loja do mundo de dropshipping onde tudo — desde a curadoria de produtos até o atendimento — é feito por IAs.</p>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="num">{{ stats.products_curated|int }}</div>
+                <div class="label">Produtos IA</div>
+            </div>
+            <div class="hero-stat">
+                <div class="num">{{ stats.visitors|int }}</div>
+                <div class="label">Visitantes</div>
+            </div>
+            <div class="hero-stat">
+                <div class="num">{{ stats.orders_count|int }}</div>
+                <div class="label">Pedidos</div>
+            </div>
+            <div class="hero-stat">
+                <div class="num">R$ {{ "%.0f"|format(stats.total_revenue) }}</div>
+                <div class="label">Receita</div>
+            </div>
+            <div class="hero-stat">
+                <div class="num">{{ stats.ai_decisions|int }}</div>
+                <div class="label">Decisões IA</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="categories">
+        <a href="/" class="cat-btn {% if not current_cat %}active{% endif %}">Todos</a>
+        {% for cat in categories %}
+        <a href="/?cat={{ cat.id }}" class="cat-btn {% if current_cat == cat.id %}active{% endif %}">
+            {{ cat.icon }} {{ cat.name }}
+        </a>
+        {% endfor %}
+    </div>
+    
+    <div class="sort-bar">
+        <span>Ordenar:</span>
+        <a href="/?cat={{ current_cat or '' }}&sort=popular" class="sort-btn {% if current_sort == 'popular' %}active{% endif %}">Mais Vendidos</a>
+        <a href="/?cat={{ current_cat or '' }}&sort=price_asc" class="sort-btn {% if current_sort == 'price_asc' %}active{% endif %}">Menor Preço</a>
+        <a href="/?cat={{ current_cat or '' }}&sort=price_desc" class="sort-btn {% if current_sort == 'price_desc' %}active{% endif %}">Maior Preço</a>
+        <a href="/?cat={{ current_cat or '' }}&sort=rating" class="sort-btn {% if current_sort == 'rating' %}active{% endif %}">Avaliação</a>
+        <a href="/?cat={{ current_cat or '' }}&sort=discount" class="sort-btn {% if current_sort == 'discount' %}active{% endif %}">Desconto</a>
+    </div>
+    
+    <div class="products-grid">
+        {% for p in products %}
+        <div class="product-card" onclick="window.location='/product/{{ p.id }}'">
+            <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">
+            <div class="badge-row">
+                <span class="sold-tag">🔥 {{ p.sold }} vendidos</span>
+                <span class="discount-tag">-{{ p.discount }}%</span>
+            </div>
+            <div class="product-info">
+                {% if p.brand == 'Nike' %}<span class="brand-tag brand-nike">NIKE ✓</span>{% endif %}
+                {% if p.brand == 'Anthropic' %}<span class="brand-tag brand-anthropic">ANTHROPIC</span>{% endif %}
+                <div class="product-name">{{ p.name }}</div>
+                <div class="product-desc">{{ p.description }}</div>
+                <div class="product-rating">
+                    <span class="stars">{% for i in range(5) %}{% if i < p.rating|int %}★{% else %}☆{% endif %}{% endfor %}</span>
+                    <span style="color:var(--gray-400); font-size:12px">({{ p.reviews_count }})</span>
+                </div>
+                <div class="price-row">
+                    <span class="price-now">R$ {{ "%.2f"|format(p.price) }}</span>
+                    <span class="price-old">R$ {{ "%.2f"|format(p.old_price) }}</span>
+                </div>
+                <div class="product-footer">
+                    <span class="shipping">🚚 {{ p.shipping_days }} dias</span>
+                    <button class="buy-btn" onclick="event.stopPropagation(); buyProduct('{{ p.id }}', '{{ p.name }}')">
+                        COMPRAR
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if not products %}
+    <div class="empty">
+        <div style="font-size:64px">🔍</div>
+        <h2>Nenhum produto encontrado</h2>
+        <p>Tente outra busca ou categoria</p>
+    </div>
+    {% endif %}
+    
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <div class="chat-box" id="chatBox">
+            <div class="chat-header">
+                <span style="font-size:24px">🎧</span>
+                <div>
+                    <h4>Nova — Suporte IA</h4>
+                    <small>Online agora</small>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="msg ai">Olá! Sou a Nova, assistente IA da loja. Como posso ajudar?</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Digite sua mensagem..." onkeypress="if(event.key==='Enter')sendChat()">
+                <button onclick="sendChat()">➤</button>
+            </div>
+        </div>
+        <button class="chat-toggle" onclick="toggleChat()">💬</button>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <footer class="footer">
+        <h3>AI DROP STORE</h3>
+        <p>Dropshipping 100% operado por Inteligência Artificial. Nike + Anthropic + Tech + Beleza + Fitness + Pets.
+           Powered by Claude AI + Ollama. Dados em PostgreSQL + SQLite.</p>
+        <div class="footer-team">
+            {% for key, ai in ai_employees.items() %}
+            <div class="footer-ai">
+                <div class="avatar">{{ ai.avatar }}</div>
+                <div class="name">{{ ai.name }}<br>{{ ai.role }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="footer-bottom">
+            <div class="tech-badges">
+                <span class="tech-badge">🐘 PostgreSQL</span>
+                <span class="tech-badge">📁 SQLite</span>
+                <span class="tech-badge">🤖 Anthropic Claude</span>
+                <span class="tech-badge">🦙 Ollama</span>
+                <span class="tech-badge">⚡ FastAPI</span>
+            </div>
+            <br>
+            <span>© 2026 AI Drop Store</span>
+        </div>
+    </footer>
+    
+    <script>
+        function toggleChat() { document.getElementById('chatBox').classList.toggle('open'); }
+        
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            const messages = document.getElementById('chatMessages');
+            messages.innerHTML += '<div class="msg user">' + msg + '</div>';
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+            try {
+                const r = await fetch('/api/chat?message=' + encodeURIComponent(msg));
+                const data = await r.json();
+                messages.innerHTML += '<div class="msg ai">' + data.response + '</div>';
+            } catch(e) {
+                messages.innerHTML += '<div class="msg ai">Desculpe, tive um problema. Tente novamente!</div>';
+            }
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        async function buyProduct(id, name) {
+            try {
+                const r = await fetch('/api/buy/' + id, {method: 'POST'});
+                const data = await r.json();
+                showToast(data.success ? '✅ ' + data.message : '❌ ' + (data.error || 'Erro'));
+            } catch(e) { showToast('❌ Erro de conexão'); }
+        }
+        
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 4000);
+        }
+        
+        setInterval(async () => {
+            try {
+                const r = await fetch('/api/stats');
+                const d = await r.json();
+                const nums = document.querySelectorAll('.hero-stat .num');
+                if (nums.length >= 5) {
+                    nums[0].textContent = Math.round(d.stats.products_curated);
+                    nums[1].textContent = Math.round(d.stats.visitors);
+                    nums[2].textContent = Math.round(d.stats.orders_count);
+                    nums[3].textContent = 'R$ ' + Math.round(d.stats.total_revenue);
+                    nums[4].textContent = Math.round(d.stats.ai_decisions);
+                }
+            } catch(e) {}
+        }, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - AI Drop Store</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f0f23; --surface: #1a1a2e; --card: #16213e;
+            --primary: #8B5CF6; --secondary: #EC4899; --accent: #06B6D4;
+            --text: #e2e8f0; --text-dim: #94a3b8; --success: #10B981;
+            --warning: #F59E0B; --danger: #EF4444;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+        .navbar {
+            background: var(--surface); padding: 15px 30px;
+            display: flex; align-items: center; gap: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .navbar a { color: var(--text-dim); text-decoration: none; font-size: 14px; }
+        .navbar a:hover { color: var(--primary); }
+        .logo { font-size: 20px; font-weight: 800; }
+        .logo span { background: linear-gradient(135deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .product-page { max-width: 1100px; margin: 30px auto; padding: 0 30px; }
+        .product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .product-image-box {
+            background: var(--card); border-radius: 20px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .product-image-box img { width: 100%; height: 450px; object-fit: cover; }
+        
+        .product-details { display: flex; flex-direction: column; gap: 20px; }
+        .breadcrumb { font-size: 12px; color: var(--text-dim); }
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+        h1 { font-size: 28px; font-weight: 800; line-height: 1.2; }
+        .rating-row { display: flex; align-items: center; gap: 10px; }
+        .stars { color: var(--warning); font-size: 18px; }
+        .rating-text { color: var(--text-dim); font-size: 14px; }
+        
+        .price-box {
+            background: var(--card); padding: 20px; border-radius: 16px;
+            border: 1px solid rgba(139,92,246,0.3);
+        }
+        .price-row { display: flex; align-items: baseline; gap: 12px; }
+        .big-price { font-size: 36px; font-weight: 800; color: var(--success); }
+        .old-price { font-size: 18px; color: var(--text-dim); text-decoration: line-through; }
+        .discount-tag {
+            background: var(--danger); color: white; padding: 4px 12px;
+            border-radius: 15px; font-size: 14px; font-weight: 700;
+        }
+        .savings { color: var(--success); font-size: 14px; margin-top: 8px; }
+        
+        .desc-box {
+            background: var(--card); padding: 20px; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05); line-height: 1.6;
+        }
+        .desc-box h3 { margin-bottom: 10px; color: var(--accent); font-size: 14px; }
+        .desc-box p { color: var(--text-dim); font-size: 14px; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .info-item {
+            background: var(--card); padding: 14px; border-radius: 12px;
+            display: flex; align-items: center; gap: 10px; font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .info-item span:first-child { font-size: 20px; }
+        
+        .buy-section { display: flex; gap: 12px; }
+        .qty-select {
+            background: var(--card); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text); padding: 12px 16px; border-radius: 12px;
+            font-size: 16px; width: 80px;
+        }
+        .buy-now {
+            flex: 1; background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; border: none; padding: 16px; border-radius: 12px;
+            font-size: 18px; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .buy-now:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(139,92,246,0.4); }
+        
+        .ai-info {
+            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(236,72,153,0.1));
+            padding: 16px; border-radius: 12px;
+            border: 1px solid rgba(139,92,246,0.2); font-size: 13px;
+        }
+        .ai-info h4 { color: var(--primary); margin-bottom: 8px; }
+        .ai-info p { color: var(--text-dim); line-height: 1.5; }
+        
+        /* Related */
+        .related { margin-top: 50px; }
+        .related h2 { font-size: 22px; margin-bottom: 20px; }
+        .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .related-card {
+            background: var(--card); border-radius: 12px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s;
+        }
+        .related-card:hover { border-color: var(--primary); }
+        .related-card img { width: 100%; height: 150px; object-fit: cover; }
+        .related-card .info { padding: 12px; }
+        .related-card .name { font-size: 13px; font-weight: 600; }
+        .related-card .price { color: var(--success); font-weight: 700; margin-top: 6px; }
+        
+        .toast {
+            position: fixed; top: 20px; right: 20px; background: var(--success);
+            color: white; padding: 15px 25px; border-radius: 12px;
+            font-size: 14px; z-index: 2000; display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .product-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🛒 <span>AI Drop Store</span></div>
+        <a href="/">← Voltar à Loja</a>
+        <a href="/dashboard">📊 Dashboard</a>
+    </nav>
+    
+    <div class="product-page">
+        <div class="product-layout">
+            <div class="product-image-box">
+                <img src="{{ product.image }}" alt="{{ product.name }}">
+            </div>
+            
+            <div class="product-details">
+                <div class="breadcrumb">
+                    <a href="/">Loja</a> / 
+                    <a href="/?cat={{ product.category }}">{{ product.category|capitalize }}</a> / 
+                    {{ product.name }}
+                </div>
+                
+                <h1>{{ product.name }}</h1>
+                
+                <div class="rating-row">
+                    <span class="stars">{% for i in range(5) %}{% if i < product.rating|int %}★{% else %}☆{% endif %}{% endfor %}</span>
+                    <span class="rating-text">{{ product.rating }} ({{ product.reviews_count }} avaliações) • {{ product.sold }} vendidos</span>
+                </div>
+                
+                <div class="price-box">
+                    <div class="price-row">
+                        <span class="big-price">R$ {{ "%.2f"|format(product.price) }}</span>
+                        <span class="old-price">R$ {{ "%.2f"|format(product.old_price) }}</span>
+                        <span class="discount-tag">-{{ product.discount }}%</span>
+                    </div>
+                    <div class="savings">💰 Você economiza R$ {{ "%.2f"|format(product.old_price - product.price) }}</div>
+                </div>
+                
+                <div class="desc-box">
+                    <h3>✍️ Descrição por Aria (IA Copywriter)</h3>
+                    <p>{{ product.description }}</p>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item"><span>🚚</span> Entrega em {{ product.shipping_days }} dias</div>
+                    <div class="info-item"><span>📦</span> {{ product.stock }} em estoque</div>
+                    <div class="info-item"><span>🔄</span> 30 dias para troca</div>
+                    <div class="info-item"><span>🔒</span> Compra segura</div>
+                </div>
+                
+                <div class="buy-section">
+                    <select class="qty-select" id="qty">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                    </select>
+                    <button class="buy-now" onclick="buyNow()">🛒 Comprar Agora</button>
+                </div>
+                
+                <div class="ai-info">
+                    <h4>🤖 Este produto foi gerido por IAs</h4>
+                    <p>
+                        👩‍💼 <strong>Luna</strong> selecionou este produto do catálogo<br>
+                        ✍️ <strong>Aria</strong> escreveu a descrição persuasiva<br>
+                        📊 <strong>Zara</strong> otimizou o preço (margem: {{ product.margin }}%)<br>
+                        🚚 <strong>Vega</strong> gerencia a logística de entrega
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        {% if related %}
+        <div class="related">
+            <h2>Produtos Relacionados</h2>
+            <div class="related-grid">
+                {% for r in related %}
+                <div class="related-card" onclick="window.location='/product/{{ r.id }}'">
+                    <img src="{{ r.image }}" alt="{{ r.name }}">
+                    <div class="info">
+                        <div class="name">{{ r.name }}</div>
+                        <div class="price">R$ {{ "%.2f"|format(r.price) }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        async function buyNow() {
+            const qty = document.getElementById('qty').value;
+            try {
+                const r = await fetch('/api/buy/{{ product.id }}?qty=' + qty, {method: 'POST'});
+                const data = await r.json();
+                if (data.success) {
+                    showToast('✅ ' + data.message);
+                } else {
+                    showToast('❌ ' + (data.error || 'Erro'));
+                }
+            } catch(e) { showToast('❌ Erro de conexão'); }
+        }
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 4000);
+        }
+    </script>
+</body>
+</html>

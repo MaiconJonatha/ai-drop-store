@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ai-drop-store
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: OLLAMA_URL
+        value: "http://localhost:11434"
+    plan: free

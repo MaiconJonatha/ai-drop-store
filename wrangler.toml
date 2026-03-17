@@ -1,0 +1,6 @@
+name = "ai-drop-store"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+OLLAMA_URL = "http://localhost:11434"

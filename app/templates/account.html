@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Conta - AI Drop Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --black: #111; --white: #fff; --gray-100: #f5f5f5; --gray-200: #e5e5e5; --gray-400: #999; --gray-600: #666; --red: #E30613; --success: #10B981; }
+        body { font-family: 'Inter', sans-serif; background: var(--gray-100); color: var(--black); }
+        .navbar { background: var(--white); padding: 16px 40px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--gray-200); }
+        .logo { font-size: 24px; font-weight: 900; }
+        .logo .ai { color: var(--red); }
+        .navbar a { color: var(--black); text-decoration: none; font-size: 14px; font-weight: 600; }
+        .container { max-width: 500px; margin: 40px auto; padding: 0 20px; }
+        .card { background: var(--white); border-radius: 16px; padding: 32px; border: 1px solid var(--gray-200); margin-bottom: 20px; }
+        .card h2 { font-size: 24px; font-weight: 900; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 0; margin-bottom: 24px; }
+        .tab { flex: 1; padding: 12px; text-align: center; font-weight: 700; font-size: 14px; cursor: pointer; border-bottom: 3px solid var(--gray-200); transition: 0.2s; }
+        .tab.active { border-color: var(--black); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+        .form-group input { width: 100%; padding: 12px 16px; border: 1px solid var(--gray-200); border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; }
+        .form-group input:focus { border-color: var(--black); }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.2s; }
+        .btn-primary { background: var(--black); color: var(--white); }
+        .btn-primary:hover { background: var(--red); }
+        .btn-outline { background: var(--white); color: var(--black); border: 2px solid var(--gray-200); margin-top: 10px; }
+        .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; display: none; }
+        .msg.error { background: #FEE2E2; color: var(--red); display: block; }
+        .msg.success { background: #D1FAE5; color: var(--success); display: block; }
+        .profile { display: none; }
+        .profile.active { display: block; }
+        .stat-row { display: flex; gap: 16px; margin-bottom: 20px; }
+        .stat { flex: 1; background: var(--gray-100); padding: 16px; border-radius: 12px; text-align: center; }
+        .stat .num { font-size: 24px; font-weight: 900; }
+        .stat .label { font-size: 11px; color: var(--gray-600); }
+        .order-item { padding: 12px 0; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center; }
+        .order-item:last-child { border: none; }
+        .order-name { font-weight: 600; font-size: 14px; }
+        .order-meta { font-size: 12px; color: var(--gray-600); }
+        .order-total { font-weight: 700; font-size: 15px; }
+        .status { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .status-p { background: #FEF3C7; color: #92400E; }
+        .status-e { background: #DBEAFE; color: #1E40AF; }
+        .status-t { background: #D1FAE5; color: #065F46; }
+        #authSection, #profileSection { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><span class="ai">AI</span> DROP STORE</div>
+        <a href="/">Loja</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/conta" style="color:var(--red)">Minha Conta</a>
+    </nav>
+
+    <div class="container">
+        <!-- AUTH SECTION -->
+        <div id="authSection">
+            <div class="card">
+                <div class="tabs">
+                    <div class="tab active" onclick="showTab('login')">ENTRAR</div>
+                    <div class="tab" onclick="showTab('register')">CADASTRAR</div>
+                </div>
+                <div id="msgBox" class="msg"></div>
+
+                <!-- Login -->
+                <div id="loginForm">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="seu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha</label>
+                        <input type="password" id="loginPass" placeholder="Sua senha">
+                    </div>
+                    <button class="btn btn-primary" onclick="doLogin()">ENTRAR</button>
+                </div>
+
+                <!-- Register -->
+                <div id="registerForm" style="display:none">
+                    <div class="form-group">
+                        <label>Nome completo</label>
+                        <input type="text" id="regName" placeholder="Seu nome">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="regEmail" placeholder="seu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha</label>
+                        <input type="password" id="regPass" placeholder="Mínimo 6 caracteres">
+                    </div>
+                    <button class="btn btn-primary" onclick="doRegister()">CRIAR CONTA</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE SECTION -->
+        <div id="profileSection">
+            <div class="card">
+                <h2>Olá, <span id="userName">Cliente</span>!</h2>
+                <div class="stat-row">
+                    <div class="stat">
+                        <div class="num" id="totalOrders">0</div>
+                        <div class="label">PEDIDOS</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="totalSpent">R$ 0</div>
+                        <div class="label">TOTAL GASTO</div>
+                    </div>
+                </div>
+                <p style="font-size:13px; color:var(--gray-600); margin-bottom:12px" id="userEmail"></p>
+            </div>
+
+            <div class="card">
+                <h2>Meus Pedidos</h2>
+                <div id="ordersList">
+                    <p style="color:var(--gray-400); text-align:center; padding:20px">Nenhum pedido ainda</p>
+                </div>
+            </div>
+
+            <button class="btn btn-outline" onclick="doLogout()">SAIR DA CONTA</button>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (tab === 'login') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+            }
+        }
+
+        function showMsg(text, type) {
+            const box = document.getElementById('msgBox');
+            box.textContent = text;
+            box.className = 'msg ' + type;
+        }
+
+        async function doRegister() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPass').value;
+            if (!name || !email || !password) return showMsg('Preencha todos os campos', 'error');
+            if (password.length < 6) return showMsg('Senha deve ter no mínimo 6 caracteres', 'error');
+            const r = await fetch('/api/register', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, email, password})});
+            const d = await r.json();
+            if (d.success) {
+                token = d.token;
+                localStorage.setItem('token', token);
+                showMsg('Conta criada com sucesso!', 'success');
+                setTimeout(loadProfile, 500);
+            } else showMsg(d.error, 'error');
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPass').value;
+            if (!email || !password) return showMsg('Preencha todos os campos', 'error');
+            const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password})});
+            const d = await r.json();
+            if (d.success) {
+                token = d.token;
+                localStorage.setItem('token', token);
+                loadProfile();
+            } else showMsg(d.error, 'error');
+        }
+
+        async function loadProfile() {
+            if (!token) { showAuth(); return; }
+            try {
+                const r = await fetch('/api/me', {headers: {'Authorization': 'Bearer ' + token}});
+                const d = await r.json();
+                if (d.error) { showAuth(); return; }
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('profileSection').style.display = 'block';
+                document.getElementById('userName').textContent = d.customer.name;
+                document.getElementById('userEmail').textContent = d.customer.email;
+                document.getElementById('totalOrders').textContent = d.customer.total_orders;
+                document.getElementById('totalSpent').textContent = 'R$ ' + (d.customer.total_spent || 0).toFixed(2);
+
+                const list = document.getElementById('ordersList');
+                if (d.orders && d.orders.length > 0) {
+                    list.innerHTML = d.orders.map(o => {
+                        const sc = o.status === 'Processando' ? 'status-p' : o.status === 'Enviado' ? 'status-e' : 'status-t';
+                        return '<div class="order-item"><div><div class="order-name">' + o.product_name +
+                            '</div><div class="order-meta">' + o.order_id + ' • ' + o.qty + 'x</div></div>' +
+                            '<div style="text-align:right"><div class="order-total">R$ ' + o.total.toFixed(2) +
+                            '</div><span class="status ' + sc + '">' + o.status + '</span></div></div>';
+                    }).join('');
+                }
+            } catch(e) { showAuth(); }
+        }
+
+        function showAuth() {
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('profileSection').style.display = 'none';
+        }
+
+        function doLogout() {
+            localStorage.removeItem('token');
+            token = null;
+            showAuth();
+        }
+
+        // Init
+        if (token) loadProfile(); else showAuth();
+    </script>
+</body>
+</html>
